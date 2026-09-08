@@ -1,3 +1,8 @@
+"""
+Node class
+
+Provide logic for creating Node instances used in Cloud and Edge simulations.
+"""
 from dataclasses import dataclass
 
 
