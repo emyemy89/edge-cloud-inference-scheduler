@@ -11,6 +11,9 @@ class InferenceRequest:
     deadline: float
 
 def generate_requests(num_requests: int) -> list[InferenceRequest]:
+    """
+    Generate rnd inference requests
+    """
     requests = []
     for i in range(num_requests):
         requests.append(
