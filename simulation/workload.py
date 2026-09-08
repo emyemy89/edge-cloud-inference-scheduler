@@ -21,3 +21,9 @@ def generate_requests(num_requests: int) -> list[InferenceRequest]:
             )
         )
     return requests
+
+if __name__ == "__main__":
+    requests = generate_requests(10)
+
+    for request in requests:
+        print(request)
