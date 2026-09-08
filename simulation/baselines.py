@@ -22,7 +22,7 @@ def always_cloud(nodes: list[Node], request: InferenceRequest) -> Node:
 
 def lowest_latency(nodes: list[Node], request: InferenceRequest) -> Node:
     """
-    Pick the lowest latency node 
+    Pick the lowest latency node
     """
     return min(
         nodes,
