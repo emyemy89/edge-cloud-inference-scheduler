@@ -6,7 +6,7 @@ Logic for: always edge, always cloud and Greedy
 from nodes.node import Node
 from simulation.workload import InferenceRequest
 
-def always_edge(nodes: list[Node], request: InferenceRequest) -> Node:
+def always_edge_baseline(nodes: list[Node], request: InferenceRequest) -> Node:
     """
     Always pick the first available edge
     """
@@ -16,7 +16,7 @@ def always_edge(nodes: list[Node], request: InferenceRequest) -> Node:
         raise RuntimeError("No available edge node")
     return edge_nodes[0]
 
-def always_cloud(nodes: list[Node], request: InferenceRequest) -> Node:
+def always_cloud_baseline(nodes: list[Node], request: InferenceRequest) -> Node:
     """
     Always pick cloud
     """
@@ -26,11 +26,14 @@ def always_cloud(nodes: list[Node], request: InferenceRequest) -> Node:
     return cloud
 
 
-def lowest_latency(nodes: list[Node], request: InferenceRequest) -> Node:
+def greedy_baseline(nodes: list[Node], request: InferenceRequest) -> Node:
     """
     Pick the lowest latency node
     """
+    # Find all available nodes
+    available_nodes = [ node for node in nodes
+        if node.can_handle(request.required_compute)]
     return min(
-        nodes,
+        available_nodes,
         key=lambda node: node.estimated_latency(request.required_compute),
     )
