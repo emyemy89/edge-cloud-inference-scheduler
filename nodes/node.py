@@ -28,11 +28,22 @@ class Node:
         return self.network_latency + compute_time
 
     def add_load(self, required_compute: float):
+        """
+        Add load to the current load
+        """
         self.current_load += required_compute
 
     def remove_load(self, required_compute: float):
+        """
+        Remove load from current, make sure it is not less than 0
+        """
         self.current_load = max(0, int(self.current_load - required_compute))
 
-    
+    def utilization(self):
+        """
+        Calculate the utilization of this Node
+        """
+        return self.current_load / self.compute_capacity
+
 
 
