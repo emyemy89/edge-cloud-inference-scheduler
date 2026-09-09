@@ -19,7 +19,7 @@ def generate_requests(num_requests: int) -> list[InferenceRequest]:
         requests.append(
             InferenceRequest(
                 request_id=i,
-                required_compute=random.uniform(2, 10),
+                required_compute=random.uniform(2, 10), # a uniform distribution, any number in between
                 deadline=random.uniform(50, 200),
             )
         )
