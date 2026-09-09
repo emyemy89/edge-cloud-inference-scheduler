@@ -11,7 +11,7 @@ class Node:
     name: str
     compute_capacity: float
     network_latency: float
-    const_per_request: float
+    cost_per_request: float
     current_load: float = 0.0
 
     def can_handle(self, required_compute: float):

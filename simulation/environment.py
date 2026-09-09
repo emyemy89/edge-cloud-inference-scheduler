@@ -26,3 +26,4 @@ class SimulationEnvironment:
         latency = node.estimated_latency(request.required_compute)
         node.current_load += request.required_compute
         return latency
+    
