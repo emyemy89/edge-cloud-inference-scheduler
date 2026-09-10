@@ -28,6 +28,9 @@ class SimulationEnvironment:
             node.current_load = 0.0
 
     def release_finished_requests(self):
+        """
+        Release the finished requests
+        """
         remaining_requests = []
         for active in self.active_requests:
             if active.finish_time <= self.current_time:
@@ -47,5 +50,11 @@ class SimulationEnvironment:
                 f"{node.name} cannot handle request {request.request_id}"
             )
         latency = node.estimated_latency(request.required_compute)
-        node.current_load += request.required_compute
+        node.add_load(request.required_compute)
+        active_request = ActiveRequest(request=request, node=node, finish_time=self.current_time + latency)
+        self.active_requests.append(active_request)
         return latency
+
+    def advance_time(self, amount:float):
+        self.current_time += amount
+        self.release_finished_requests()
