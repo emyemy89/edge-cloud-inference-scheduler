@@ -24,13 +24,29 @@ class Metrics():
         self.results.append(RequestResults(request_id, node_name, latency, cost, utilization, deadline, latency<=deadline))
 
     def average_latency(self)->float:
+        """
+        Average latency over all nodes
+        """
         if not self.results:
             return 0
         return sum(result.latency for result in self.results)/len(self.results)
 
     def total_latency(self)->float:
+        """
+        Total latency over all nodes
+        """
         if not self.results:
             return 0
-        return sum(result.letency for result in self.results)
+        return sum(result.latency for result in self.results)
 
-    
+    def average_utilization(self)->float:
+        """
+        Average utilization over all nodes
+        """
+        if not self.results:
+            return 0
+        return sum(result.utilization for result in self.results)/len(self.results)
+
+
+
+
