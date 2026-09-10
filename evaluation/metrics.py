@@ -31,13 +31,13 @@ class Metrics():
             return 0
         return sum(result.latency for result in self.results)/len(self.results)
 
-    def total_latency(self)->float:
+    def total_cost(self)->float:
         """
         Total latency over all nodes
         """
         if not self.results:
             return 0
-        return sum(result.latency for result in self.results)
+        return sum(result.cost for result in self.results)
 
     def average_utilization(self)->float:
         """
