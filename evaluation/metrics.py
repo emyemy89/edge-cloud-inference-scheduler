@@ -50,7 +50,7 @@ class Metrics():
     def deadline_violation_rate(self)->float:
         if not self.results:
             return 0
-        violations = sum(not result.dedline_met for result in self.results)
+        violations = sum(not result.deadline_met for result in self.results)
         return violations/len(self.results)
 
 
