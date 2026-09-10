@@ -27,6 +27,16 @@ class SimulationEnvironment:
         for node in self.nodes:
             node.current_load = 0.0
 
+    def release_finished_requests(self):
+        remaining_requests = []
+        for active in self.active_requests:
+            if active.finish_time <= self.current_time:
+                active.node.remove_load(active.request.required_compute)
+            else:
+                remaining_requests.append(active)
+            self.active_requests = remaining_requests
+
+
     def execute(self, node: Node, request: InferenceRequest,) -> float:
         """
         Execute a request on a node.
