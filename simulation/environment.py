@@ -56,5 +56,8 @@ class SimulationEnvironment:
         return latency
 
     def advance_time(self, amount:float):
+        """
+        Advance the simulation time
+        """
         self.current_time += amount
         self.release_finished_requests()

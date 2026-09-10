@@ -30,14 +30,18 @@ def main():
     environment.reset()
 
     for request in requests:
+        environment.release_finished_requests()
         selected_node = greedy_baseline(nodes, request)
-        latency = environment.execute(selected_node, request,)
+        latency = environment.execute(selected_node, request)
 
         print(
+            f"t={environment.current_time:.2f} ms | "
             f"Request {request.request_id}: "
             f"{selected_node.name}, "
             f"latency={latency:.2f} ms"
         )
+        # Simulate requests arriving every 20 ms
+        environment.advance_time(20)
 
 
 if __name__ == "__main__":
