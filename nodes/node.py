@@ -47,7 +47,7 @@ class Node:
         """
         Calculate the utilization of this Node
         """
-        return self.current_load / self.compute_capacity
+        return min(1.0, self.current_load / self.compute_capacity)
 
 
 
