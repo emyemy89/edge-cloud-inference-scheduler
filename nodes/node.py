@@ -23,8 +23,6 @@ class Node:
     def estimated_latency(self, required_compute: float):
         """
         Calculate the estimated latency of the Node
-        :param required_compute:
-        :return:
         """
         compute_time = required_compute / self.compute_capacity
         return self.network_latency + compute_time
