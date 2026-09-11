@@ -11,7 +11,7 @@ class Node:
     name: str
     compute_capacity: float
     network_latency: float
-    const_per_request: float
+    cost_per_request: float
     current_load: float = 0.0
 
     def can_handle(self, required_compute: float):
@@ -23,8 +23,27 @@ class Node:
     def estimated_latency(self, required_compute: float):
         """
         Calculate the estimated latency of the Node
-        :param required_compute:
-        :return:
         """
         compute_time = required_compute / self.compute_capacity
         return self.network_latency + compute_time
+
+    def add_load(self, required_compute: float):
+        """
+        Add load to the current load
+        """
+        self.current_load += required_compute
+
+    def remove_load(self, required_compute: float):
+        """
+        Remove load from current, make sure it is not less than 0
+        """
+        self.current_load = max(0, int(self.current_load - required_compute))
+
+    def utilization(self):
+        """
+        Calculate the utilization of this Node
+        """
+        return self.current_load / self.compute_capacity
+
+
+
