@@ -18,7 +18,7 @@ class Node:
         """
         Assess whether this Node can handle compute requests or not.
         """
-        return self.current_load + required_compute <= self.compute_capacity
+        return required_compute <= self.compute_capacity
 
     def estimated_latency(self, required_compute: float):
         """
