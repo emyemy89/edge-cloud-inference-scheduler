@@ -26,10 +26,22 @@ def generate_training_data(nodes: list[Node], requests: list[InferenceRequest], 
     rng = random.Random(seed)
     rows = []
     for request in requests:
-        # Generate a different system state for this request.
+        # Choose the type of system state
+        state_type = rng.choices(["normal", "congested", "severely_congested"], weights=[0.5, 0.3, 0.2], k=1)[0]
         for node in nodes:
-            node.current_load = rng.uniform(0, node.compute_capacity)
-            node.network_latency = (node.base_network_latency * rng.uniform(0.5, 2.0))
+            if "edge" in node.name:
+                if state_type == "normal":
+                    utilization = rng.uniform(0.0, 0.6)
+                elif state_type == "congested":
+                    utilization = rng.uniform(0.6, 0.9)
+                else:
+                    utilization = rng.uniform(0.9, 1.0)
+                node.current_load = (utilization * node.compute_capacity)
+                node.network_latency = (node.base_network_latency* rng.uniform(0.5, 2.0))
+            else:
+                # Cloud is generally less utilized.
+                node.current_load = (rng.uniform(0.0, 0.3)* node.compute_capacity)
+                node.network_latency = (node.base_network_latency * rng.uniform(0.5, 1.5))
         state = get_state_features(nodes, request)
         node_latencies = {}
         for node in nodes:
