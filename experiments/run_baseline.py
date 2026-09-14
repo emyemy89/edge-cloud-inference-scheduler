@@ -57,11 +57,9 @@ def print_results(policy_name: str, metrics: Metrics):
     print(f"\n--- {policy_name} ---")
     print(f"Average latency: {metrics.average_latency():.2f} ms")
     print(f"Total cost: {metrics.total_cost():.2f}")
-    print(f"Average utilization: "
-        f"{metrics.average_utilization():.2%}")
-    print(
-        f"Deadline violation rate: "
-        f"{metrics.deadline_violation_rate():.2%}")
+    print(f"Average utilization: " f"{metrics.average_utilization():.2%}")
+    print(f"Deadline violation rate: " f"{metrics.deadline_violation_rate():.2%}")
+    print(f"Node selections: {metrics.node_selection_counts()}")
 
 
 def main():
