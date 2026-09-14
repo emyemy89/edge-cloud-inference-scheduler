@@ -9,6 +9,7 @@ from simulation.environment import SimulationEnvironment
 from simulation.network import (update_network_conditions, NETWORK_UPDATE_INTERVAL)
 from scheduler.baselines import always_edge_baseline, always_cloud_baseline, greedy_baseline
 from evaluation.metrics import Metrics
+from ml.dataset import generate_training_data
 
 
 def create_nodes() -> list[Node]:
@@ -82,6 +83,17 @@ def main():
             for policy_name, policy in policies.items():
                 metrics = run_policy(policy, requests, arrival_interval, network_scenario, seed=42)
                 print_results(policy_name, metrics)
+    # Dummy test for generating dataset
+    nodes = create_nodes()
+    requests = generate_requests(1000)
+    dataset = generate_training_data(nodes, requests)
+    print(f"Dataset shape: {dataset.shape}")
+    print("\nColumns:")
+    print(dataset.columns.tolist())
+    print("\nTarget distribution:")
+    print(dataset["target"].value_counts())
+    print("\nFirst 5 rows:")
+    print(dataset.head())
 
 if __name__ == "__main__":
     main()
