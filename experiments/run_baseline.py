@@ -1,9 +1,12 @@
 """
 Simple experiment for running the baseline
 """
+import random
+
 from nodes.node import Node
 from simulation.workload import generate_requests
 from simulation.environment import SimulationEnvironment
+from simulation.network import (update_network_conditions, NETWORK_UPDATE_INTERVAL)
 from scheduler.baselines import always_edge_baseline, always_cloud_baseline, greedy_baseline
 from evaluation.metrics import Metrics
 
@@ -24,14 +27,18 @@ def create_nodes() -> list[Node]:
              cost_per_request=0.05, ),
     ]
 
-def run_policy(policy, requests, arrival_interval):
+def run_policy(policy, requests, arrival_interval, network_scenario, seed=42):
     # We generate new nodes for every baseline
      nodes = create_nodes()
      environment = SimulationEnvironment(nodes)
      metrics = Metrics()
      environment.reset()
+     rng = random.Random(seed)
      # Request loop
-     for request in requests:
+     for i, request in enumerate(requests):
+         # Change network conditions every 'NET_UPDT' time
+         if i % NETWORK_UPDATE_INTERVAL == 0:
+             update_network_conditions(nodes, network_scenario, rng)
          environment.release_finished_requests()
          selected_node = policy(nodes, request)
          latency = environment.execute(selected_node, request)
