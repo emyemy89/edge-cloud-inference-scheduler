@@ -48,14 +48,6 @@ def run_policy(policy, requests, arrival_interval, network_scenario, seed=42):
                         cost=selected_node.cost_per_request,
                         utilization=selected_node.utilization(),
                         deadline=request.deadline)
-
-         # print(
-         #     f"t={environment.current_time:.2f} ms | "
-         #     f"Request {request.request_id}: "
-         #     f"{selected_node.name}, "
-         #     f"latency={latency:.2f} ms"
-         # )
-         # Simulate requests arriving every 'arrival_interval' ms
          environment.advance_time(arrival_interval)
      return metrics
 
