@@ -69,10 +69,19 @@ def main():
         "Greedy": greedy_baseline,
     }
     # Test for different loads (50 low, 5 very high load)
-    for arrival_interval in [50, 20, 10, 5]:
-        for policy_name, policy in policies.items():
-            metrics = run_policy(policy, requests, arrival_interval)
-            print_results(policy_name, metrics)
+    workload_scenarios = {"low_load": 50, "medium_load": 20, "high_load": 10, "very_high_load": 5}
+    network_scenarios = ["stable", "moderate", "high"]
+    
+    for network_scenario in network_scenarios:
+        print(f"\n==============================")
+        print(f"NETWORK: {network_scenario.upper()}")
+        print(f"==============================")
+
+        for scenario_name, arrival_interval in workload_scenarios.items():
+            print(f"\n=== {scenario_name} ===")
+            for policy_name, policy in policies.items():
+                metrics = run_policy(policy, requests, arrival_interval, network_scenario, seed=42)
+                print_results(policy_name, metrics)
 
 if __name__ == "__main__":
     main()
