@@ -33,6 +33,8 @@ def greedy_baseline(nodes: list[Node], request: InferenceRequest) -> Node:
     # Find all available nodes
     available_nodes = [ node for node in nodes
         if node.can_handle(request.required_compute)]
+    if not available_nodes:
+        raise RuntimeError("No node can handle request")
     return min(
         available_nodes,
         key=lambda node: node.estimated_latency(request.required_compute),
