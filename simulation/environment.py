@@ -46,9 +46,7 @@ class SimulationEnvironment:
         Returns estimated latency in milliseconds.
         """
         if not node.can_handle(request.required_compute):
-            raise RuntimeError(
-                f"{node.name} cannot handle request {request.request_id}"
-            )
+            raise RuntimeError(f"{node.name} cannot handle request {request.request_id}")
         latency = node.estimated_latency(request.required_compute)
         node.add_load(request.required_compute)
         active_request = ActiveRequest(request=request, node=node, finish_time=self.current_time + latency)
