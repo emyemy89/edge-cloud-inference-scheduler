@@ -21,3 +21,13 @@ def train_model(dataset):
     model.fit(X_train, y_train)
 
     return model, X_test, y_test
+
+def evaluate_model(model, X_test, y_test):
+    y_pred = model.predict(X_test)
+    print(f"Accuracy:{accuracy_score(y_test, y_pred):.2%}")
+    print(classification_report(
+            y_test, y_pred,
+            target_names=["edge_1", "edge_2", "cloud"],
+        )
+    )
+    
