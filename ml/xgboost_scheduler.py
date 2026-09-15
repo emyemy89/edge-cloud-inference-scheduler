@@ -30,4 +30,7 @@ def evaluate_model(model, X_test, y_test):
             target_names=["edge_1", "edge_2", "cloud"],
         )
     )
-    
+
+def predict_node(model, features):
+    predictions = model.predict(features)[0]
+    return REVERSE_LABEL_MAP[int(predictions)]
