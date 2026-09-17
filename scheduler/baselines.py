@@ -39,6 +39,3 @@ def greedy_baseline(nodes: list[Node], request: InferenceRequest) -> Node:
         available_nodes,
         key=lambda node: node.estimated_latency(request.required_compute),
     )
-
-def xgboost_policy(nodes, request):
-    return predict_node(model, nodes, request)
