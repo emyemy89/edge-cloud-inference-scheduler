@@ -12,8 +12,6 @@ from simulation.network import (update_network_conditions, NETWORK_UPDATE_INTERV
 from scheduler.baselines import always_edge_baseline, always_cloud_baseline, greedy_baseline
 from evaluation.metrics import Metrics
 
-from ml.dataset import generate_training_data
-from ml.xgboost_scheduler import train_model, evaluate_model
 
 
 def create_nodes() -> list[Node]:
