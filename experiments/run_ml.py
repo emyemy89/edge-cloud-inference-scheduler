@@ -2,7 +2,6 @@
 The ML-Scheduler simulation
 """
 import random
-import pandas as pd
 
 from nodes.node import Node
 from simulation.workload import generate_requests
@@ -10,7 +9,7 @@ from simulation.environment import SimulationEnvironment
 from simulation.network import update_network_conditions, NETWORK_UPDATE_INTERVAL
 from evaluation.metrics import Metrics
 
-from ml.dataset import get_state_features, generate_training_data
+from ml.dataset import generate_training_data
 from ml.xgboost_scheduler import predict_node, train_model, evaluate_model
 
 def create_nodes() -> list[Node]:
