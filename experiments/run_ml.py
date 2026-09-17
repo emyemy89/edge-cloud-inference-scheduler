@@ -78,7 +78,7 @@ def main():
     evaluate_model(model, X_test, y_test)
     workload_scenarios = {"low_load": 50, "medium_load": 20, "high_load": 10, "very_high_load": 5}
     network_scenarios = ["stable", "moderate", "high"]
-    requests = generate_requests(100)
+    evaluation_seeds = [1, 2, 3, 4, 5]
 
     for network_scenario in network_scenarios:
         print(f"\n==============================")
@@ -88,14 +88,23 @@ def main():
         for scenario_name, arrival_interval in workload_scenarios.items():
             print(f"\n=== {scenario_name} ===")
 
-            metrics = run_ml_policy(
-                requests,
-                arrival_interval,
-                network_scenario,
-                seed=42,
-            )
+            for seed in evaluation_seeds:
+                requests = generate_requests(100, seed=seed)
 
-            print_results(metrics)
+                metrics = run_ml_policy(
+                    requests,
+                    arrival_interval,
+                    network_scenario,
+                    seed=seed,
+                )
+
+                print(
+                    f"Seed {seed}: "
+                    f"latency={metrics.average_latency():.2f} ms, "
+                    f"cost={metrics.total_cost():.2f}, "
+                    f"utilization={metrics.average_utilization():.2%}, "
+                    f"violations={metrics.deadline_violation_rate():.2%}"
+                )
 
 
 if __name__ == "__main__":
