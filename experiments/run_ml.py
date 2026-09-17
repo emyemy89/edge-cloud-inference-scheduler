@@ -65,12 +65,14 @@ def run_ml_policy(requests, arrival_interval, network_scenario, seed=42):
 
 
 # Boilerplate and main function, to be cleaned later
-def print_results(metrics):
-    print(f"Average latency: {metrics.average_latency():.2f} ms")
-    print(f"Total cost: {metrics.total_cost():.2f}")
-    print(f"Average utilization: {metrics.average_utilization():.2%}")
-    print(f"Deadline violation rate: {metrics.deadline_violation_rate():.2%}")
-    print(f"Node selections: {metrics.node_selection_counts()}")
+def print_results(policy_name: str, metrics: Metrics, seed):
+    print(
+        f"Seed {seed} - {policy_name}: "
+        f"latency={metrics.average_latency():.2f} ms, "
+        f"cost={metrics.total_cost():.2f}, "
+        f"utilization={metrics.average_utilization():.2%}, "
+        f"violations={metrics.deadline_violation_rate():.2%}"
+    )
 
 
 def main():
@@ -98,13 +100,7 @@ def main():
                     seed=seed,
                 )
 
-                print(
-                    f"Seed {seed}: "
-                    f"latency={metrics.average_latency():.2f} ms, "
-                    f"cost={metrics.total_cost():.2f}, "
-                    f"utilization={metrics.average_utilization():.2%}, "
-                    f"violations={metrics.deadline_violation_rate():.2%}"
-                )
+                print_results(None, metrics, seed)
 
 
 if __name__ == "__main__":
