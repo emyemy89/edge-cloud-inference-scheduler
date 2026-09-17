@@ -1,6 +1,10 @@
+import pandas as pd
+
 from xgboost import XGBClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
+
+from ml.dataset import get_state_features
 
 LABEL_MAP={"edge_1": 0, "edge_2": 1, "cloud": 2}
 REVERSE_LABEL_MAP = {0: "edge_1", 1: "edge_2", 2: "cloud"}
@@ -31,6 +35,11 @@ def evaluate_model(model, X_test, y_test):
         )
     )
 
-def predict_node(model, features):
-    predictions = model.predict(features)[0]
-    return REVERSE_LABEL_MAP[int(predictions)]
+def predict_node(model, nodes, request):
+    """
+    Predict which node should handle the request
+    """
+    features = get_state_features(nodes, request)
+    X = pd.DataFrame([features])
+    prediction = model.predict(X)[0]
+    return nodes[int(prediction)]
