@@ -1,4 +1,5 @@
 import statistics
+import csv
 from collections import defaultdict
 
 from simulation.workload import generate_requests
@@ -15,9 +16,15 @@ evaluation_seeds = [1, 2, 3, 4, 5]
 workload_scenarios = {"low_load": 50, "medium_load": 20, "high_load": 10, "very_high_load": 5}
 network_scenarios = ["stable", "moderate", "high"]
 
+RESULTS_CSV_PATH = "experiments/results.csv"
+
 
 def aggregate_results(results):
+    rows = []
+    
     for key, runs in results.items():
+        network_scenario, scenario_name, policy_name = key
+        
         latencies = [run["latency"] for run in runs]
         costs = [run["cost"] for run in runs]
         utilizations = [run["utilization"] for run in runs]
@@ -38,6 +45,34 @@ def aggregate_results(results):
             f"{statistics.mean(violations):.2%} ± "
             f"{statistics.stdev(violations):.2%}"
         )
+        
+        rows.append({
+            "network_condition": network_scenario,
+            "load_level": scenario_name,
+            "policy": policy_name,
+            "latency_mean": statistics.mean(latencies),
+            "latency_std": statistics.stdev(latencies),
+            "cost_mean": statistics.mean(costs),
+            "cost_std": statistics.stdev(costs),
+            "utilization_mean": statistics.mean(utilizations),
+            "utilization_std": statistics.stdev(utilizations),
+            "violations_mean": statistics.mean(violations),
+            "violations_std": statistics.stdev(violations),
+        })
+    
+    save_results_csv(rows, RESULTS_CSV_PATH)
+
+
+def save_results_csv(rows, file_path):
+    if not rows:
+        return
+    
+    with open(file_path, mode="w", newline="") as f:
+        writer  = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
+    
+    print(f"\nResults saved to {file_path}")
 
 
 def main():
