@@ -24,7 +24,7 @@ def create_nodes() -> list[Node]:
              cost_per_request=0.05, ),
     ]
 
-def run_policy(policy, requests):
+def run_policy(policy, requests, arrival_interval):
     # We generate new nodes for every baseline
      nodes = create_nodes()
      environment = SimulationEnvironment(nodes)
@@ -48,8 +48,8 @@ def run_policy(policy, requests):
          #     f"{selected_node.name}, "
          #     f"latency={latency:.2f} ms"
          # )
-         # Simulate requests arriving every 20 ms
-         environment.advance_time(20)
+         # Simulate requests arriving every 'arrival_interval' ms
+         environment.advance_time(arrival_interval)
      return metrics
 
 
@@ -71,9 +71,11 @@ def main():
         "Always Cloud": always_cloud_baseline,
         "Greedy": greedy_baseline,
     }
-    for policy_name, policy in policies.items():
-        metrics = run_policy(policy, requests)
-        print_results(policy_name, metrics)
+    # Test for different loads (50 low, 5 very high load)
+    for arrival_interval in [50, 20, 10, 5]:
+        for policy_name, policy in policies.items():
+            metrics = run_policy(policy, requests, arrival_interval)
+            print_results(policy_name, metrics)
 
 if __name__ == "__main__":
     main()
