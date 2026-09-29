@@ -20,7 +20,7 @@ class MobileNetInference:
         input_tensor = self.preprocess(image).unsqueeze(0)
         input_tensor = input_tensor.to(self.device)
         start_time = time.perf_counter()
-        with torch.no_grad():
+        with torch.no_grad(): # No gradient needed for inference
             output = self.model(input_tensor)
         inference_time = (time.perf_counter() - start_time) * 1000
         probabilities = torch.nn.functional.softmax(output[0], dim=0)
