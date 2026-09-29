@@ -33,7 +33,7 @@ class MobileNetInference:
 
 if __name__ == "__main__":
     model = MobileNetInference()
-    image_path = "test.jpg"
+    image_path = "dog.png"
     # Warm-up
     for _ in range(5):
         model.predict(image_path)
