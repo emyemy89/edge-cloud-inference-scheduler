@@ -5,7 +5,8 @@ NETWORK_UPDATE_INTERVAL = 10
 
 def update_network_conditions(nodes, scenario, rng):
     """
-    Update node network latencies according to the selected scenario.
+    Update node network latencies according to the selected scenario
+    Basically add artificial latency depending on scenario
     """
     if scenario == "stable":
         return
