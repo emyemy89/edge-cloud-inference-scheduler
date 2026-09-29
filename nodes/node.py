@@ -13,6 +13,11 @@ class Node:
     network_latency: float
     cost_per_request: float
     current_load: float = 0.0
+    base_network_latency: float = 0.0
+
+    def __post_init__(self):
+        if self.base_network_latency == 0.0:
+            self.base_network_latency = self.network_latency
 
     def can_handle(self, required_compute: float):
         """
