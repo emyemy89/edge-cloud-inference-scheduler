@@ -33,7 +33,7 @@ class MobileNetInference:
 
 if __name__ == "__main__":
     model = MobileNetInference()
-    result = model.predict("test.jpg")
+    result = model.predict("dog.png")
     print(f"Class: {result['class']}")
     print(f"Confidence: {result['confidence']:.2%}")
     print(f"Inference time: " f"{result['inference_time_ms']:.2f} ms")
