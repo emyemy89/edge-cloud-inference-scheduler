@@ -3,7 +3,7 @@ import torch
 from PIL import Image
 from torchvision.models import MobileNet_V3_Small_Weights, mobilenet_v3_small
 
-class MobileNet_Inference:
+class MobileNetInference:
     def __init__(self):
         self.device = torch.device("cpu")
         weights = MobileNet_V3_Small_Weights.DEFAULT
@@ -30,3 +30,10 @@ class MobileNet_Inference:
             "confidence": confidence.item(),
             "inference_time_ms": inference_time,
         }
+
+if __name__ == "__main__":
+    model = MobileNetInference()
+    result = model.predict("test.jpg")
+    print(f"Class: {result['class']}")
+    print(f"Confidence: {result['confidence']:.2%}")
+    print(f"Inference time: " f"{result['inference_time_ms']:.2f} ms")
