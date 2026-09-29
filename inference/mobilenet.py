@@ -33,7 +33,16 @@ class MobileNetInference:
 
 if __name__ == "__main__":
     model = MobileNetInference()
-    result = model.predict("dog.png")
+    image_path = "test.jpg"
+    # Warm-up
+    for _ in range(5):
+        model.predict(image_path)
+    times = []
+    for _ in range(20):
+        result = model.predict(image_path)
+        times.append(result["inference_time_ms"])
     print(f"Class: {result['class']}")
     print(f"Confidence: {result['confidence']:.2%}")
-    print(f"Inference time: " f"{result['inference_time_ms']:.2f} ms")
+    print(f"Average inference time: {sum(times) / len(times):.2f} ms")
+    print(f"Min inference time: {min(times):.2f} ms")
+    print(f"Max inference time: {max(times):.2f} ms")
