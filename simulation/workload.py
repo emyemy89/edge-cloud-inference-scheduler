@@ -10,17 +10,18 @@ class InferenceRequest:
     required_compute: float
     deadline: float
 
-def generate_requests(num_requests: int) -> list[InferenceRequest]:
+def generate_requests(num_requests: int, seed: int=42) -> list[InferenceRequest]:
     """
     Generate rnd inference requests
     """
+    rng = random.Random(seed)
     requests = []
     for i in range(num_requests):
         requests.append(
             InferenceRequest(
                 request_id=i,
-                required_compute=random.uniform(2, 10), # a uniform distribution, any number in between
-                deadline=random.uniform(50, 200),
+                required_compute=rng.uniform(2, 10), # a uniform distribution, any number in between
+                deadline=rng.uniform(50, 200),
             )
         )
     return requests

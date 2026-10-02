@@ -21,7 +21,7 @@ def generate_training_data(nodes: list[Node], requests: list[InferenceRequest], 
     """
     Generate one training example for every request.
     Each example contains the system state and the best node according
-    to the simulated latency.
+    to the simulated latency, cost and deadline
     """
     rng = random.Random(seed)
     rows = []
@@ -43,13 +43,19 @@ def generate_training_data(nodes: list[Node], requests: list[InferenceRequest], 
                 node.current_load = (rng.uniform(0.0, 0.3)* node.compute_capacity)
                 node.network_latency = (node.base_network_latency * rng.uniform(0.5, 1.5))
         state = get_state_features(nodes, request)
-        node_latencies = {}
+        node_scores = {}
         for node in nodes:
-            if node.can_handle(request.required_compute):
-                node_latencies[node.name] = node.estimated_latency(request.required_compute)
-        if not node_latencies:
+            if not node.can_handle(request.required_compute):
+                continue
+            latency = node.estimated_latency(request.required_compute)
+            cost = node.cost_per_request
+            # Penalize missing the deadline
+            deadline_penalty = 100 if latency>request.deadline else 0
+            score = latency + cost*100 + deadline_penalty
+            node_scores[node.name] = score
+        if not node_scores:
             continue
-        best_node = min(node_latencies, key=node_latencies.get)
+        best_node = min(node_scores, key=node_scores.get)
         row = state.copy()
         row["target"] = best_node
         rows.append(row)
