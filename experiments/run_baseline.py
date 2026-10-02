@@ -4,12 +4,16 @@ Simple experiment for running the baseline
 import random
 
 from nodes.node import Node
+
 from simulation.workload import generate_requests
 from simulation.environment import SimulationEnvironment
 from simulation.network import (update_network_conditions, NETWORK_UPDATE_INTERVAL)
+
 from scheduler.baselines import always_edge_baseline, always_cloud_baseline, greedy_baseline
 from evaluation.metrics import Metrics
+
 from ml.dataset import generate_training_data
+from ml.xgboost_scheduler import train_model, evaluate_model
 
 
 def create_nodes() -> list[Node]:
@@ -25,7 +29,7 @@ def create_nodes() -> list[Node]:
         Node(name="cloud",
              compute_capacity=100,
              network_latency=50,
-             cost_per_request=0.05, ),
+             cost_per_request=0.05 ),
     ]
 
 def run_policy(policy, requests, arrival_interval, network_scenario, seed=42):
@@ -83,10 +87,17 @@ def main():
             for policy_name, policy in policies.items():
                 metrics = run_policy(policy, requests, arrival_interval, network_scenario, seed=42)
                 print_results(policy_name, metrics)
+
+    # ML scheduler
     # Dummy test for generating dataset
     nodes = create_nodes()
     requests = generate_requests(1000)
     dataset = generate_training_data(nodes, requests)
+    model, X_test, y_test = train_model(dataset)
+
+    print(f"\n ----XGBoost----")
+    evaluate_model(model, X_test, y_test)
+
     print(f"Dataset shape: {dataset.shape}")
     print("\nColumns:")
     print(dataset.columns.tolist())
