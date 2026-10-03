@@ -16,78 +16,41 @@ NUM_REQUESTS = 20
 
 # Same basic node configuration as the simulator
 NODES = [
-    Node(name="edge_1",
-        compute_capacity=10,
-        network_latency=5,
-        cost_per_request=0.01,
-    ),
-    Node(
-        name="edge_2",
-        compute_capacity=20,
-        network_latency=10,
-        cost_per_request=0.015,
-    ),
-    Node(
-        name="cloud",
-        compute_capacity=100,
-        network_latency=50,
-        cost_per_request=0.05,
-    ),
+    Node(name="edge_1", compute_capacity=10, network_latency=5, cost_per_request=0.01,),
+    Node(name="edge_2", compute_capacity=20, network_latency=10, cost_per_request=0.015,),
+    Node(name="cloud", compute_capacity=100, network_latency=50, cost_per_request=0.05,),
 ]
 
 
-# --------------------------------------------------
 # Train XGBoost
-# --------------------------------------------------
-
 print("Training XGBoost model...")
-
 requests = generate_requests(1000)
 dataset = generate_training_data(NODES, requests)
-
 model, _, _ = train_model(dataset)
 
 print("Model trained.\n")
 
 
-# --------------------------------------------------
 # Run end-to-end experiment
-# --------------------------------------------------
-
 results = []
 
 for request_id in range(NUM_REQUESTS):
 
-    request = InferenceRequest(
-        request_id=request_id,
-        required_compute=5.0,
-        deadline=100.0,
-    )
+    request = InferenceRequest( request_id=request_id, required_compute=5.0, deadline=100.0,)
 
     # Measure only the scheduler decision
     scheduler_start = time.perf_counter()
 
-    selected_node = predict_node(
-        model,
-        NODES,
-        request,
-    )
+    selected_node = predict_node( model, NODES, request,)
 
-    scheduler_time_ms = (
-        time.perf_counter() - scheduler_start
-    ) * 1000
+    scheduler_time_ms = (time.perf_counter() - scheduler_start) * 1000
 
     # Send actual inference request
     inference_start = time.perf_counter()
 
-    inference_result = send_inference(
-        selected_node.name,
-        IMAGE_PATH,
-    )
+    inference_result = send_inference(selected_node.name, IMAGE_PATH,)
 
-    end_to_end_time_ms = (
-        time.perf_counter() - inference_start
-    ) * 1000
+    end_to_end_time_ms = (time.perf_counter() - inference_start) * 1000
 
     result = {
         "request_id": request_id,
@@ -114,27 +77,18 @@ for request_id in range(NUM_REQUESTS):
 
 # --------------------------------------------------
 # Aggregate results
-# --------------------------------------------------
 
 print("\n" + "=" * 60)
 print("END-TO-END RESULTS")
 print("=" * 60)
 
-avg_scheduler = sum(
-    r["scheduler_time_ms"] for r in results
-) / len(results)
+avg_scheduler = sum(r["scheduler_time_ms"] for r in results) / len(results)
 
-avg_inference = sum(
-    r["inference_time_ms"] for r in results
-) / len(results)
+avg_inference = sum(r["inference_time_ms"] for r in results) / len(results)
 
-avg_api = sum(
-    r["api_total_time_ms"] for r in results
-) / len(results)
+avg_api = sum(r["api_total_time_ms"] for r in results) / len(results)
 
-avg_end_to_end = sum(
-    r["end_to_end_time_ms"] for r in results
-) / len(results)
+avg_end_to_end = sum(r["end_to_end_time_ms"] for r in results) / len(results)
 
 print(f"Requests:                {NUM_REQUESTS}")
 print(f"Average scheduler time:  {avg_scheduler:.2f} ms")
@@ -145,11 +99,7 @@ print(f"Average end-to-end time: {avg_end_to_end:.2f} ms")
 print("\nNode selections:")
 
 for node in NODES:
-    count = sum(
-        r["node"] == node.name
-        for r in results
-    )
+    count = sum(r["node"] == node.name for r in results)
 
-    print(
-        f"  {node.name}: {count}/{NUM_REQUESTS}"
-    )
+    print(f"  {node.name}: {count}/{NUM_REQUESTS}")
+    
