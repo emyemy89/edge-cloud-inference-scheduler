@@ -12,8 +12,6 @@ from simulation.network import (update_network_conditions, NETWORK_UPDATE_INTERV
 from scheduler.baselines import always_edge_baseline, always_cloud_baseline, greedy_baseline
 from evaluation.metrics import Metrics
 
-from ml.dataset import generate_training_data
-from ml.xgboost_scheduler import train_model, evaluate_model
 
 
 def create_nodes() -> list[Node]:
@@ -57,17 +55,17 @@ def run_policy(policy, requests, arrival_interval, network_scenario, seed=42):
      return metrics
 
 
-def print_results(policy_name: str, metrics: Metrics):
-    print(f"\n--- {policy_name} ---")
-    print(f"Average latency: {metrics.average_latency():.2f} ms")
-    print(f"Total cost: {metrics.total_cost():.2f}")
-    print(f"Average utilization: " f"{metrics.average_utilization():.2%}")
-    print(f"Deadline violation rate: " f"{metrics.deadline_violation_rate():.2%}")
-    print(f"Node selections: {metrics.node_selection_counts()}")
+def print_results(policy_name: str, metrics: Metrics, seed):
+    print(
+        f"Seed {seed} - {policy_name}: "
+        f"latency={metrics.average_latency():.2f} ms, "
+        f"cost={metrics.total_cost():.2f}, "
+        f"utilization={metrics.average_utilization():.2%}, "
+        f"violations={metrics.deadline_violation_rate():.2%}"
+    )
 
 
 def main():
-    requests = generate_requests(100)
     policies = {
         "Always Edge": always_edge_baseline,
         "Always Cloud": always_cloud_baseline,
@@ -76,6 +74,7 @@ def main():
     # Test for different loads (50 low, 5 very high load)
     workload_scenarios = {"low_load": 50, "medium_load": 20, "high_load": 10, "very_high_load": 5}
     network_scenarios = ["stable", "moderate", "high"]
+    evaluation_seeds = [1, 2, 3, 4, 5]
     
     for network_scenario in network_scenarios:
         print(f"\n==============================")
@@ -84,27 +83,18 @@ def main():
 
         for scenario_name, arrival_interval in workload_scenarios.items():
             print(f"\n=== {scenario_name} ===")
-            for policy_name, policy in policies.items():
-                metrics = run_policy(policy, requests, arrival_interval, network_scenario, seed=42)
-                print_results(policy_name, metrics)
+            for seed in evaluation_seeds:
+                requests = generate_requests(100, seed=seed)
+                for policy_name, policy in policies.items():
+                    metrics = run_policy(
+                        policy,
+                        requests,
+                        arrival_interval,
+                        network_scenario,
+                        seed=seed,
+                    )
+                    print_results(policy_name, metrics, seed)
 
-    # ML scheduler
-    # Dummy test for generating dataset
-    nodes = create_nodes()
-    requests = generate_requests(1000)
-    dataset = generate_training_data(nodes, requests)
-    model, X_test, y_test = train_model(dataset)
-
-    print(f"\n ----XGBoost----")
-    evaluate_model(model, X_test, y_test)
-
-    print(f"Dataset shape: {dataset.shape}")
-    print("\nColumns:")
-    print(dataset.columns.tolist())
-    print("\nTarget distribution:")
-    print(dataset["target"].value_counts())
-    print("\nFirst 5 rows:")
-    print(dataset.head())
 
 if __name__ == "__main__":
     main()
