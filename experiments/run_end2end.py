@@ -1,4 +1,5 @@
 import time
+import random
 from pathlib import Path
 
 from nodes.node import Node
@@ -33,6 +34,7 @@ print("Model trained.\n")
 
 # Run end-to-end experiment
 results = []
+rng = random.Random(42)
 
 for request_id in range(NUM_REQUESTS):
     request = InferenceRequest(request_id=request_id, required_compute=2.0 + (request_id % 5) * 2.0,
@@ -41,8 +43,15 @@ for request_id in range(NUM_REQUESTS):
     # Measure only the scheduler decision
     scheduler_start = time.perf_counter()
 
-    selected_node = predict_node( model, NODES, request,)
+    for node in NODES:
+        if "edge" in node.name:
+            node.current_load = rng.uniform(0.0, 1.0) * node.compute_capacity
+            node.network_latency = (node.base_network_latency* rng.uniform(0.5, 2.0))
+        else:
+            node.current_load = rng.uniform(0.0, 0.5) * node.compute_capacity
+            node.network_latency = (node.base_network_latency* rng.uniform(0.5, 1.5))
 
+    selected_node = predict_node( model, NODES, request,)
     scheduler_time_ms = (time.perf_counter() - scheduler_start) * 1000
 
     # Send actual inference request
@@ -68,9 +77,10 @@ for request_id in range(NUM_REQUESTS):
     print(
         f"Request {request_id + 1:02d}: "
         f"{selected_node.name:7s} | "
+        f"compute={request.required_compute:.1f} | "
+        f"deadline={request.deadline:.1f} ms | "
         f"scheduler={scheduler_time_ms:.2f} ms | "
         f"inference={inference_result['inference_time_ms']:.2f} ms | "
-        f"API={inference_result['total_time_ms']:.2f} ms | "
         f"end-to-end={end_to_end_time_ms:.2f} ms"
     )
 
