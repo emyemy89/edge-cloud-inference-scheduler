@@ -1,12 +1,14 @@
 import time
+import statistics
 import random
 from pathlib import Path
 
-from nodes.node import Node
-from simulation.workload import InferenceRequest, generate_requests
+from inference.client import send_inference
 from ml.dataset import generate_training_data
 from ml.xgboost_scheduler import train_model, predict_node
-from inference.client import send_inference
+from nodes.node import Node
+from simulation.workload import InferenceRequest, generate_requests
+from scheduler.baselines import always_edge_baseline, always_cloud_baseline, greedy_baseline
 
 
 # --------------------------------------------------
@@ -25,8 +27,8 @@ NODES = [
 
 # Train XGBoost
 print("Training XGBoost model...")
-requests = generate_requests(1000)
-dataset = generate_training_data(NODES, requests)
+training_requests = generate_requests(1000)
+dataset = generate_training_data(NODES, training_requests)
 model, _, _ = train_model(dataset)
 
 print("Model trained.\n")
@@ -34,15 +36,13 @@ print("Model trained.\n")
 
 # Run end-to-end experiment
 results = []
+requests = []
+states = []
 rng = random.Random(42)
 
 for request_id in range(NUM_REQUESTS):
     request = InferenceRequest(request_id=request_id, required_compute=2.0 + (request_id % 5) * 2.0,
                                deadline=50.0 + (request_id % 4) * 25.0,)
-
-    # Measure only the scheduler decision
-    scheduler_start = time.perf_counter()
-
     for node in NODES:
         if "edge" in node.name:
             node.current_load = rng.uniform(0.0, 1.0) * node.compute_capacity
@@ -51,65 +51,116 @@ for request_id in range(NUM_REQUESTS):
             node.current_load = rng.uniform(0.0, 0.5) * node.compute_capacity
             node.network_latency = (node.base_network_latency* rng.uniform(0.5, 1.5))
 
-    selected_node = predict_node( model, NODES, request,)
-    scheduler_time_ms = (time.perf_counter() - scheduler_start) * 1000
+    requests.append(request)
 
-    # Send actual inference request
-    inference_start = time.perf_counter()
+    states.append([(node.current_load, node.network_latency)
+        for node in NODES
+    ])
 
-    inference_result = send_inference(selected_node.name, IMAGE_PATH,)
+policies = {
+    "Always Edge": lambda nodes, request: always_edge_baseline(nodes, request),
+    "Always Cloud": lambda nodes, request: always_cloud_baseline(nodes, request),
+    "Greedy": lambda nodes, request: greedy_baseline(nodes, request),
+    "XGBoost": lambda nodes, request: predict_node(
+        model, nodes, request,),
+}
 
-    end_to_end_time_ms = (time.perf_counter() - inference_start) * 1000
+all_results = {}
 
-    result = {
-        "request_id": request_id,
-        "node": selected_node.name,
-        "scheduler_time_ms": scheduler_time_ms,
-        "inference_time_ms": inference_result["inference_time_ms"],
-        "api_total_time_ms": inference_result["total_time_ms"],
-        "end_to_end_time_ms": end_to_end_time_ms,
-        "class": inference_result["class"],
-        "confidence": inference_result["confidence"],
-    }
+for policy_name, policy in policies.items():
 
-    results.append(result)
+    print("\n" + "=" * 60)
+    print(policy_name)
+    print("=" * 60)
 
-    print(
-        f"Request {request_id + 1:02d}: "
-        f"{selected_node.name:7s} | "
-        f"compute={request.required_compute:.1f} | "
-        f"deadline={request.deadline:.1f} ms | "
-        f"scheduler={scheduler_time_ms:.2f} ms | "
-        f"inference={inference_result['inference_time_ms']:.2f} ms | "
-        f"end-to-end={end_to_end_time_ms:.2f} ms"
+    results = []
+
+    for request_id, request in enumerate(requests):
+
+        # Restore exactly the same state for every policy
+        for node, state in zip(NODES, states[request_id]):
+            node.current_load = state[0]
+            node.network_latency = state[1]
+        scheduler_start = time.perf_counter()
+        selected_node = policy(NODES,request,)
+
+        scheduler_time_ms = (time.perf_counter() - scheduler_start) * 1000
+        inference_start = time.perf_counter()
+        inference_result = send_inference(selected_node.name, IMAGE_PATH,)
+
+        end_to_end_time_ms = (time.perf_counter() - inference_start) * 1000
+        deadline_met = (end_to_end_time_ms <= request.deadline)
+
+        results.append({
+            "node": selected_node.name,
+            "scheduler_time_ms": scheduler_time_ms,
+            "inference_time_ms": inference_result[
+                "inference_time_ms"
+            ],
+            "api_time_ms": inference_result[
+                "total_time_ms"
+            ],
+            "end_to_end_time_ms": end_to_end_time_ms,
+            "deadline_met": deadline_met,
+        })
+
+    all_results[policy_name] = results
+
+print("\n" + "=" * 70)
+print("END-TO-END POLICY COMPARISON")
+print("=" * 70)
+
+for policy_name, results in all_results.items():
+
+    latencies = [
+        r["end_to_end_time_ms"]
+        for r in results
+    ]
+
+    inference_times = [
+        r["inference_time_ms"]
+        for r in results
+    ]
+
+    scheduler_times = [
+        r["scheduler_time_ms"]
+        for r in results
+    ]
+
+    violations = sum(
+        not r["deadline_met"]
+        for r in results
     )
 
+    print(f"\n{policy_name}")
+    print(
+        f"  End-to-end latency: "
+        f"{statistics.mean(latencies):.2f} ± "
+        f"{statistics.stdev(latencies):.2f} ms"
+    )
 
-# --------------------------------------------------
-# Aggregate results
+    print(
+        f"  Inference latency:  "
+        f"{statistics.mean(inference_times):.2f} ± "
+        f"{statistics.stdev(inference_times):.2f} ms"
+    )
 
-print("\n" + "=" * 60)
-print("END-TO-END RESULTS")
-print("=" * 60)
+    print(
+        f"  Scheduler time:     "
+        f"{statistics.mean(scheduler_times):.2f} ± "
+        f"{statistics.stdev(scheduler_times):.2f} ms"
+    )
 
-avg_scheduler = sum(r["scheduler_time_ms"] for r in results) / len(results)
+    print(
+        f"  Deadline violations: "
+        f"{violations}/{NUM_REQUESTS} "
+        f"({violations / NUM_REQUESTS:.1%})"
+    )
 
-avg_inference = sum(r["inference_time_ms"] for r in results) / len(results)
+    print("  Node selections:")
 
-avg_api = sum(r["api_total_time_ms"] for r in results) / len(results)
+    for node in NODES:
+        count = sum(r["node"] == node.name for r in results)
 
-avg_end_to_end = sum(r["end_to_end_time_ms"] for r in results) / len(results)
-
-print(f"Requests:                {NUM_REQUESTS}")
-print(f"Average scheduler time:  {avg_scheduler:.2f} ms")
-print(f"Average inference time:  {avg_inference:.2f} ms")
-print(f"Average API time:        {avg_api:.2f} ms")
-print(f"Average end-to-end time: {avg_end_to_end:.2f} ms")
-
-print("\nNode selections:")
-
-for node in NODES:
-    count = sum(r["node"] == node.name for r in results)
-
-    print(f"  {node.name}: {count}/{NUM_REQUESTS}")
+        print(f"    {node.name}: " f"{count}/{NUM_REQUESTS}")
     
