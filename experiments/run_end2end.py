@@ -107,55 +107,32 @@ print("=" * 70)
 
 for policy_name, results in all_results.items():
 
-    latencies = [
-        r["end_to_end_time_ms"]
-        for r in results
-    ]
-
-    inference_times = [
-        r["inference_time_ms"]
-        for r in results
-    ]
-
-    scheduler_times = [
-        r["scheduler_time_ms"]
-        for r in results
-    ]
-
-    violations = sum(
-        not r["deadline_met"]
-        for r in results
-    )
+    latencies = [r["end_to_end_time_ms"] for r in results]
+    inference_times = [r["inference_time_ms"] for r in results]
+    scheduler_times = [r["scheduler_time_ms"] for r in results]
+    violations = sum(not r["deadline_met"] for r in results)
 
     print(f"\n{policy_name}")
     print(
         f"  End-to-end latency: "
-        f"{statistics.mean(latencies):.2f} ± "
-        f"{statistics.stdev(latencies):.2f} ms"
+        f"{statistics.mean(latencies):.2f} ± " f"{statistics.stdev(latencies):.2f} ms"
     )
-
     print(
         f"  Inference latency:  "
-        f"{statistics.mean(inference_times):.2f} ± "
-        f"{statistics.stdev(inference_times):.2f} ms"
+        f"{statistics.mean(inference_times):.2f} ± " f"{statistics.stdev(inference_times):.2f} ms"
     )
-
     print(
         f"  Scheduler time:     "
-        f"{statistics.mean(scheduler_times):.2f} ± "
-        f"{statistics.stdev(scheduler_times):.2f} ms"
+        f"{statistics.mean(scheduler_times):.2f} ± " f"{statistics.stdev(scheduler_times):.2f} ms"
     )
-
     print(
         f"  Deadline violations: "
-        f"{violations}/{NUM_REQUESTS} "
-        f"({violations / NUM_REQUESTS:.1%})"
+        f"{violations}/{NUM_REQUESTS} " f"({violations / NUM_REQUESTS:.1%})"
     )
 
     print("  Node selections:")
 
     for node in NODES:
         count = sum(r["node"] == node.name for r in results)
-
         print(f"    {node.name}: " f"{count}/{NUM_REQUESTS}")
     
