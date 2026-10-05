@@ -35,8 +35,8 @@ print("Model trained.\n")
 results = []
 
 for request_id in range(NUM_REQUESTS):
-
-    request = InferenceRequest( request_id=request_id, required_compute=5.0, deadline=100.0,)
+    request = InferenceRequest(request_id=request_id, required_compute=2.0 + (request_id % 5) * 2.0,
+                               deadline=50.0 + (request_id % 4) * 25.0,)
 
     # Measure only the scheduler decision
     scheduler_start = time.perf_counter()
