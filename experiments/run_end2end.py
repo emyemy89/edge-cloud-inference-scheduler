@@ -13,7 +13,7 @@ from inference.client import send_inference
 # Configuration
 
 IMAGE_PATH = Path("../inference/dog.png")
-NUM_REQUESTS = 20
+NUM_REQUESTS = 50
 
 # Same basic node configuration as the simulator
 NODES = [
