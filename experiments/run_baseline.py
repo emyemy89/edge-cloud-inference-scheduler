@@ -2,6 +2,9 @@
 Simple experiment for running the baseline
 """
 import random
+import statistics
+
+from collections import defaultdict
 
 from nodes.node import Node
 
@@ -63,6 +66,41 @@ def print_results(policy_name: str, metrics: Metrics, seed):
         f"utilization={metrics.average_utilization():.2%}, "
         f"violations={metrics.deadline_violation_rate():.2%}"
     )
+def print_aggregated_results(results):
+    print("\n\n==============================")
+    print("AGGREGATED BASELINE RESULTS")
+    print("==============================")
+
+    for (network_scenario, scenario_name, policy_name), runs in results.items():
+
+        latencies = [run["latency"] for run in runs]
+        costs = [run["cost"] for run in runs]
+        utilizations = [run["utilization"] for run in runs]
+        violations = [run["violations"] for run in runs]
+
+        mean_latency = statistics.mean(latencies)
+        std_latency = statistics.stdev(latencies)
+
+        mean_cost = statistics.mean(costs)
+        std_cost = statistics.stdev(costs)
+
+        mean_utilization = statistics.mean(utilizations)
+        std_utilization = statistics.stdev(utilizations)
+
+        mean_violations = statistics.mean(violations)
+        std_violations = statistics.stdev(violations)
+
+        print(f"\n{network_scenario.upper()} / {scenario_name} / {policy_name}")
+        print(f"Average latency: {mean_latency:.2f} ± {std_latency:.2f} ms")
+        print(f"Average cost: {mean_cost:.2f} ± {std_cost:.2f}")
+        print(
+            f"Average utilization: "
+            f"{mean_utilization:.2%} ± {std_utilization:.2%}"
+        )
+        print(
+            f"Average deadline violations: "
+            f"{mean_violations:.2%} ± {std_violations:.2%}"
+        )
 
 
 def main():
@@ -75,6 +113,7 @@ def main():
     workload_scenarios = {"low_load": 50, "medium_load": 20, "high_load": 10, "very_high_load": 5}
     network_scenarios = ["stable", "moderate", "high"]
     evaluation_seeds = [1, 2, 3, 4, 5]
+    results = defaultdict(list)
     
     for network_scenario in network_scenarios:
         print(f"\n==============================")
@@ -94,7 +133,14 @@ def main():
                         seed=seed,
                     )
                     print_results(policy_name, metrics, seed)
-
+                    key = (network_scenario, scenario_name, policy_name)
+                    results[key].append({
+                        "latency": metrics.average_latency(),
+                        "cost": metrics.total_cost(),
+                        "utilization": metrics.average_utilization(),
+                        "violations": metrics.deadline_violation_rate(),
+                    })
+    print_aggregated_results(results)
 
 if __name__ == "__main__":
     main()
