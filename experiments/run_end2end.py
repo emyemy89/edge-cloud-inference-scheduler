@@ -69,14 +69,9 @@ all_results = {}
 
 for policy_name, policy in policies.items():
 
-    print("\n" + "=" * 60)
-    print(policy_name)
-    print("=" * 60)
-
     results = []
 
     for request_id, request in enumerate(requests):
-
         # Restore exactly the same state for every policy
         for node, state in zip(NODES, states[request_id]):
             node.current_load = state[0]
