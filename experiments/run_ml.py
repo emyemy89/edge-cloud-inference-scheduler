@@ -5,7 +5,7 @@ import random
 import statistics
 from collections import defaultdict
 
-from nodes.node import Node
+from nodes.node import create_nodes
 from simulation.workload import generate_requests
 from simulation.environment import SimulationEnvironment
 from simulation.network import update_network_conditions, NETWORK_UPDATE_INTERVAL
@@ -13,22 +13,6 @@ from evaluation.metrics import Metrics
 
 from ml.dataset import generate_training_data
 from ml.xgboost_scheduler import predict_node, train_model, evaluate_model
-
-def create_nodes() -> list[Node]:
-    return [
-        Node(name="edge_1",
-             compute_capacity=10,
-             network_latency=5,
-             cost_per_request=0.01),
-        Node(name="edge_2",
-             compute_capacity=20,
-             network_latency=10,
-             cost_per_request=0.015, ),
-        Node(name="cloud",
-             compute_capacity=100,
-             network_latency=50,
-             cost_per_request=0.05 ),
-    ]
 
 # The ML Model
 nodes = create_nodes()
@@ -126,13 +110,7 @@ def main():
             for seed in evaluation_seeds:
                 requests = generate_requests(100, seed=seed)
 
-                metrics = run_ml_policy(
-                    requests,
-                    arrival_interval,
-                    network_scenario,
-                    seed=seed,
-                )
-
+                metrics = run_ml_policy(requests, arrival_interval, network_scenario, seed=seed,)
                 print_results(None, metrics, seed)
                 # Store the results
                 key = (network_scenario, scenario_name)
