@@ -38,7 +38,7 @@ print("Model trained.\n")
 results = []
 requests = []
 states = []
-rng = random.Random(42)
+SEEDS = [42, 43, 44, 45, 46]
 
 for request_id in range(NUM_REQUESTS):
     request = InferenceRequest(request_id=request_id, required_compute=2.0 + (request_id % 5) * 2.0,
@@ -80,10 +80,13 @@ for policy_name, policy in policies.items():
         selected_node = policy(NODES,request,)
 
         scheduler_time_ms = (time.perf_counter() - scheduler_start) * 1000
-        inference_start = time.perf_counter()
-        inference_result = send_inference(selected_node.name, IMAGE_PATH,)
+        request_start = time.perf_counter()
 
-        end_to_end_time_ms = (time.perf_counter() - inference_start) * 1000
+        scheduler_start = time.perf_counter()
+        selected_node = policy(NODES, request)
+        scheduler_time_ms = (time.perf_counter() - scheduler_start) * 1000
+        inference_result = send_inference(selected_node.name, IMAGE_PATH,)
+        end_to_end_time_ms = (time.perf_counter() - request_start) * 1000
         deadline_met = (end_to_end_time_ms <= request.deadline)
 
         results.append({
@@ -97,6 +100,7 @@ for policy_name, policy in policies.items():
             ],
             "end_to_end_time_ms": end_to_end_time_ms,
             "deadline_met": deadline_met,
+            "cost": selected_node.cost_per_request,
         })
 
     all_results[policy_name] = results
@@ -111,6 +115,7 @@ for policy_name, results in all_results.items():
     inference_times = [r["inference_time_ms"] for r in results]
     scheduler_times = [r["scheduler_time_ms"] for r in results]
     violations = sum(not r["deadline_met"] for r in results)
+    costs = [r["cost"] for r in results]
 
     print(f"\n{policy_name}")
     print(
@@ -128,6 +133,11 @@ for policy_name, results in all_results.items():
     print(
         f"  Deadline violations: "
         f"{violations}/{NUM_REQUESTS} " f"({violations / NUM_REQUESTS:.1%})"
+    )
+
+    print(
+        f"  Average cost:       "
+        f"{statistics.mean(costs):.3f}"
     )
 
     print("  Node selections:")
