@@ -59,30 +59,14 @@ for seed in SEEDS:
 
         for node in NODES:
             if "edge" in node.name:
-                node.current_load = (
-                    rng.uniform(0.0, 1.0)
-                    * node.compute_capacity
-                )
-                node.network_latency = (
-                    node.base_network_latency
-                    * rng.uniform(0.5, 2.0)
-                )
+                node.current_load = (rng.uniform(0.0, 1.0)* node.compute_capacity)
+                node.network_latency = (node.base_network_latency* rng.uniform(0.5, 2.0))
             else:
-                node.current_load = (
-                    rng.uniform(0.0, 0.5)
-                    * node.compute_capacity
-                )
-                node.network_latency = (
-                    node.base_network_latency
-                    * rng.uniform(0.5, 1.5)
-                )
+                node.current_load = (rng.uniform(0.0, 0.5)* node.compute_capacity)
+                node.network_latency = (node.base_network_latency * rng.uniform(0.5, 1.5))
 
         requests.append(request)
-
-        states.append([
-            (node.current_load, node.network_latency)
-            for node in NODES
-        ])
+        states.append([(node.current_load, node.network_latency) for node in NODES])
 
     all_results = {}
 
@@ -138,49 +122,39 @@ for policy_name in policies:
         scheduler_times = [r["scheduler_time_ms"] for r in results]
         costs = [r["cost"] for r in results]
 
-        violations = sum(
-            not r["deadline_met"]
-            for r in results
-        )
+        violations = sum(not r["deadline_met"] for r in results)
 
         seed_latencies.append(statistics.mean(latencies))
         seed_inference_times.append(statistics.mean(inference_times))
         seed_scheduler_times.append(statistics.mean(scheduler_times))
         seed_costs.append(statistics.mean(costs))
-        seed_violation_rates.append(
-            violations / NUM_REQUESTS
-        )
+        seed_violation_rates.append(violations / NUM_REQUESTS)
 
     print(f"\n{policy_name}")
 
     print(
         f"  End-to-end latency: "
-        f"{statistics.mean(seed_latencies):.2f} ± "
-        f"{statistics.stdev(seed_latencies):.2f} ms"
+        f"{statistics.mean(seed_latencies):.2f} ± " f"{statistics.stdev(seed_latencies):.2f} ms"
     )
 
     print(
         f"  Inference latency:  "
-        f"{statistics.mean(seed_inference_times):.2f} ± "
-        f"{statistics.stdev(seed_inference_times):.2f} ms"
+        f"{statistics.mean(seed_inference_times):.2f} ± " f"{statistics.stdev(seed_inference_times):.2f} ms"
     )
 
     print(
         f"  Scheduler time:     "
-        f"{statistics.mean(seed_scheduler_times):.2f} ± "
-        f"{statistics.stdev(seed_scheduler_times):.2f} ms"
+        f"{statistics.mean(seed_scheduler_times):.2f} ± " f"{statistics.stdev(seed_scheduler_times):.2f} ms"
     )
 
     print(
         f"  Deadline violations: "
-        f"{statistics.mean(seed_violation_rates):.1%} ± "
-        f"{statistics.stdev(seed_violation_rates):.1%}"
+        f"{statistics.mean(seed_violation_rates):.1%} ± " f"{statistics.stdev(seed_violation_rates):.1%}"
     )
 
     print(
         f"  Average cost:       "
-        f"{statistics.mean(seed_costs):.3f} ± "
-        f"{statistics.stdev(seed_costs):.3f}"
+        f"{statistics.mean(seed_costs):.3f} ± " f"{statistics.stdev(seed_costs):.3f}"
     )
     print("  Node selections:")
 
