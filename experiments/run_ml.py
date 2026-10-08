@@ -32,7 +32,7 @@ def create_nodes() -> list[Node]:
 
 # The ML Model
 nodes = create_nodes()
-requests = generate_requests(1000)
+requests = generate_requests(10000)
 dataset = generate_training_data(nodes, requests)
 model, X_test, y_test = train_model(dataset)
 

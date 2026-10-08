@@ -60,7 +60,7 @@ def main():
         for scenario_name, arrival_interval in workload_scenarios.items():
             for seed in evaluation_seeds:
 
-                requests = generate_requests(100, seed=seed)
+                requests = generate_requests(1000, seed=seed)
 
                 for policy_name, policy in baseline_policies.items():
                     metrics = run_policy(policy, requests, arrival_interval, network_scenario, seed=seed,)
