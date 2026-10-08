@@ -2,14 +2,17 @@ import statistics
 import csv
 from collections import defaultdict
 
-from simulation.workload import generate_requests
-from experiments.run_baseline import run_policy
+from nodes.node import create_nodes
 from scheduler.baselines import (
     always_edge_baseline,
     always_cloud_baseline,
     greedy_baseline,
 )
-from experiments.run_ml import run_ml_policy
+from simulation.workload import generate_requests
+from simulation.runner import run_policy
+from ml.xgboost_scheduler import train_model, xgboost_policy
+from ml.dataset import generate_training_data
+from evaluation.results import aggregate_results, metrics_to_dict
 
 
 evaluation_seeds = [1, 2, 3, 4, 5]
@@ -21,10 +24,10 @@ RESULTS_CSV_PATH = "experiments/results.csv"
 
 def aggregate_results(results):
     rows = []
-    
+
     for key, runs in results.items():
         network_scenario, scenario_name, policy_name = key
-        
+
         latencies = [run["latency"] for run in runs]
         costs = [run["cost"] for run in runs]
         utilizations = [run["utilization"] for run in runs]
@@ -39,54 +42,21 @@ def aggregate_results(results):
             f"{statistics.mean(utilizations):.2%} ± "
             f"{statistics.stdev(utilizations):.2%}"
         )
+nodes = create_nodes()
+training_requests = generate_requests(10000)
+dataset = generate_training_data(nodes, training_requests)
+model, X_test, y_test = train_model(dataset)
 
-        print(
-            f"Average deadline violations: "
-            f"{statistics.mean(violations):.2%} ± "
-            f"{statistics.stdev(violations):.2%}"
-        )
-        
-        rows.append({
-            "network_condition": network_scenario,
-            "load_level": scenario_name,
-            "policy": policy_name,
-            "latency_mean": statistics.mean(latencies),
-            "latency_std": statistics.stdev(latencies),
-            "cost_mean": statistics.mean(costs),
-            "cost_std": statistics.stdev(costs),
-            "utilization_mean": statistics.mean(utilizations),
-            "utilization_std": statistics.stdev(utilizations),
-            "violations_mean": statistics.mean(violations),
-            "violations_std": statistics.stdev(violations),
-        })
-    
-    save_results_csv(rows, RESULTS_CSV_PATH)
-
-
-def save_results_csv(rows, file_path):
-    if not rows:
-        return
-    
-    with open(file_path, mode="w", newline="") as f:
-        writer  = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
-        writer.writeheader()
-        writer.writerows(rows)
-    
-    print(f"\nResults saved to {file_path}")
-
+def ml_policy(nodes, request):
+    return xgboost_policy(model, nodes, request)
 
 def main():
-    policies = {
-        "Always Edge": run_policy,
-        "Always Cloud": run_policy,
-        "Greedy": run_policy,
-        "XGBoost": run_ml_policy,
-    }
 
-    baseline_policies = {
+    policies = {
         "Always Edge": always_edge_baseline,
         "Always Cloud": always_cloud_baseline,
         "Greedy": greedy_baseline,
+        "XGBoost": ml_policy,
     }
 
     results = defaultdict(list)
@@ -97,26 +67,10 @@ def main():
 
                 requests = generate_requests(1000, seed=seed)
 
-                for policy_name, policy in baseline_policies.items():
+                for policy_name, policy in policies.items():
                     metrics = run_policy(policy, requests, arrival_interval, network_scenario, seed=seed,)
                     results[(network_scenario, scenario_name, policy_name)
-                    ].append({
-                        "latency": metrics.average_latency(),
-                        "cost": metrics.total_cost(),
-                        "utilization": metrics.average_utilization(),
-                        "violations": metrics.deadline_violation_rate(),
-                    })
-
-                metrics = run_ml_policy(requests, arrival_interval,network_scenario, seed=seed)
-
-                results[
-                    (network_scenario, scenario_name, "XGBoost")
-                ].append({
-                    "latency": metrics.average_latency(),
-                    "cost": metrics.total_cost(),
-                    "utilization": metrics.average_utilization(),
-                    "violations": metrics.deadline_violation_rate(),
-                })
+                    ].append(metrics_to_dict(metrics))
 
     print("\n\n==============================")
     print("SCHEDULER COMPARISON")

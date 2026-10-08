@@ -43,3 +43,7 @@ def predict_node(model, nodes, request):
     X = pd.DataFrame([features])
     prediction = model.predict(X)[0]
     return nodes[int(prediction)]
+
+def xgboost_policy(model, nodes, request):
+    return predict_node(model, nodes, request)
+
