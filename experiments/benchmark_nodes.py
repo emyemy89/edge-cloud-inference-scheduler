@@ -5,7 +5,7 @@ from pathlib import Path
 from inference.client import send_inference
 
 
-IMAGE_PATH = Path("../inference/dog.png")
+IMAGE_PATH = Path("../inference/images/dog.png")
 NUM_REQUESTS = 20
 
 NODES = ["edge_1", "edge_2", "cloud"]
