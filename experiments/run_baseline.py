@@ -2,7 +2,6 @@
 Simple experiment for running the baseline
 """
 import random
-import statistics
 
 from collections import defaultdict
 
