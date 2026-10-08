@@ -2,7 +2,6 @@
 The ML-Scheduler simulation
 """
 import random
-import statistics
 from collections import defaultdict
 
 from nodes.node import create_nodes
