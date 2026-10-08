@@ -116,43 +116,72 @@ for seed in SEEDS:
             })
 
         all_results[policy_name] = results
-        all_seed_results[seed] = all_results
+    all_seed_results[seed] = all_results
 
 print("\n" + "=" * 70)
 print("END-TO-END POLICY COMPARISON")
 print("=" * 70)
 
-for policy_name, results in all_results.items():
+for policy_name in policies:
 
-    latencies = [r["end_to_end_time_ms"] for r in results]
-    inference_times = [r["inference_time_ms"] for r in results]
-    scheduler_times = [r["scheduler_time_ms"] for r in results]
-    violations = sum(not r["deadline_met"] for r in results)
-    costs = [r["cost"] for r in results]
+    seed_latencies = []
+    seed_inference_times = []
+    seed_scheduler_times = []
+    seed_costs = []
+    seed_violation_rates = []
+
+    for seed in SEEDS:
+        results = all_seed_results[seed][policy_name]
+
+        latencies = [r["end_to_end_time_ms"] for r in results]
+        inference_times = [r["inference_time_ms"] for r in results]
+        scheduler_times = [r["scheduler_time_ms"] for r in results]
+        costs = [r["cost"] for r in results]
+
+        violations = sum(
+            not r["deadline_met"]
+            for r in results
+        )
+
+        seed_latencies.append(statistics.mean(latencies))
+        seed_inference_times.append(statistics.mean(inference_times))
+        seed_scheduler_times.append(statistics.mean(scheduler_times))
+        seed_costs.append(statistics.mean(costs))
+        seed_violation_rates.append(
+            violations / NUM_REQUESTS
+        )
 
     print(f"\n{policy_name}")
+
     print(
         f"  End-to-end latency: "
-        f"{statistics.mean(latencies):.2f} ± " f"{statistics.stdev(latencies):.2f} ms"
+        f"{statistics.mean(seed_latencies):.2f} ± "
+        f"{statistics.stdev(seed_latencies):.2f} ms"
     )
+
     print(
         f"  Inference latency:  "
-        f"{statistics.mean(inference_times):.2f} ± " f"{statistics.stdev(inference_times):.2f} ms"
+        f"{statistics.mean(seed_inference_times):.2f} ± "
+        f"{statistics.stdev(seed_inference_times):.2f} ms"
     )
+
     print(
         f"  Scheduler time:     "
-        f"{statistics.mean(scheduler_times):.2f} ± " f"{statistics.stdev(scheduler_times):.2f} ms"
+        f"{statistics.mean(seed_scheduler_times):.2f} ± "
+        f"{statistics.stdev(seed_scheduler_times):.2f} ms"
     )
+
     print(
         f"  Deadline violations: "
-        f"{violations}/{NUM_REQUESTS} " f"({violations / NUM_REQUESTS:.1%})"
+        f"{statistics.mean(seed_violation_rates):.1%} ± "
+        f"{statistics.stdev(seed_violation_rates):.1%}"
     )
 
     print(
         f"  Average cost:       "
-        f"{statistics.mean(costs):.3f}"
+        f"{statistics.mean(seed_costs):.3f} ± "
+        f"{statistics.stdev(seed_costs):.3f}"
     )
-
     print("  Node selections:")
 
     for node in NODES:
