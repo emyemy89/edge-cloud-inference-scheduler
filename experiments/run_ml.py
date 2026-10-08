@@ -9,7 +9,7 @@ from simulation.workload import generate_requests
 from simulation.environment import SimulationEnvironment
 from simulation.network import update_network_conditions, NETWORK_UPDATE_INTERVAL
 from evaluation.metrics import Metrics
-from evaluation.results import aggregate_results, print_results
+from evaluation.results import aggregate_results, print_results, metrics_to_dict
 
 from ml.dataset import generate_training_data
 from ml.xgboost_scheduler import predict_node, train_model, evaluate_model
@@ -73,12 +73,7 @@ def main():
                 print_results(None, metrics, seed)
                 # Store the results
                 key = (network_scenario, scenario_name)
-                results[key].append({
-                    "latency": metrics.average_latency(),
-                    "cost": metrics.total_cost(),
-                    "utilization": metrics.average_utilization(),
-                    "violations": metrics.deadline_violation_rate(),
-                })
+                results[key].append(metrics_to_dict(metrics))
     aggregate_results(results)
 
 

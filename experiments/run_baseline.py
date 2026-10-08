@@ -13,7 +13,7 @@ from simulation.network import (update_network_conditions, NETWORK_UPDATE_INTERV
 
 from scheduler.baselines import always_edge_baseline, always_cloud_baseline, greedy_baseline
 from evaluation.metrics import Metrics
-from evaluation.results import aggregate_results, print_results
+from evaluation.results import aggregate_results, print_results, metrics_to_dict
 
 
 def run_policy(policy, requests, arrival_interval, network_scenario, seed=42):
@@ -66,12 +66,7 @@ def main():
                     metrics = run_policy(policy, requests, arrival_interval, network_scenario, seed=seed,)
                     print_results(policy_name, metrics, seed)
                     key = (network_scenario, scenario_name, policy_name)
-                    results[key].append({
-                        "latency": metrics.average_latency(),
-                        "cost": metrics.total_cost(),
-                        "utilization": metrics.average_utilization(),
-                        "violations": metrics.deadline_violation_rate(),
-                    })
+                    results[key].append(metrics_to_dict(metrics))
     aggregate_results(results)
 
 if __name__ == "__main__":
