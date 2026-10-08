@@ -6,7 +6,7 @@ import statistics
 
 from collections import defaultdict
 
-from nodes.node import Node
+from nodes.node import create_nodes
 
 from simulation.workload import generate_requests
 from simulation.environment import SimulationEnvironment
@@ -15,23 +15,6 @@ from simulation.network import (update_network_conditions, NETWORK_UPDATE_INTERV
 from scheduler.baselines import always_edge_baseline, always_cloud_baseline, greedy_baseline
 from evaluation.metrics import Metrics
 
-
-
-def create_nodes() -> list[Node]:
-    return [
-        Node(name="edge_1",
-             compute_capacity=10,
-             network_latency=5,
-             cost_per_request=0.01),
-        Node(name="edge_2",
-             compute_capacity=20,
-             network_latency=10,
-             cost_per_request=0.015, ),
-        Node(name="cloud",
-             compute_capacity=100,
-             network_latency=50,
-             cost_per_request=0.05 ),
-    ]
 
 def run_policy(policy, requests, arrival_interval, network_scenario, seed=42):
     # We generate new nodes for every baseline
@@ -125,13 +108,7 @@ def main():
             for seed in evaluation_seeds:
                 requests = generate_requests(100, seed=seed)
                 for policy_name, policy in policies.items():
-                    metrics = run_policy(
-                        policy,
-                        requests,
-                        arrival_interval,
-                        network_scenario,
-                        seed=seed,
-                    )
+                    metrics = run_policy(policy, requests, arrival_interval, network_scenario, seed=seed,)
                     print_results(policy_name, metrics, seed)
                     key = (network_scenario, scenario_name, policy_name)
                     results[key].append({
