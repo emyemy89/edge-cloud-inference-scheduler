@@ -6,9 +6,7 @@ from collections import defaultdict
 
 from nodes.node import create_nodes
 from simulation.workload import generate_requests
-from simulation.environment import SimulationEnvironment
-from simulation.network import update_network_conditions, NETWORK_UPDATE_INTERVAL
-from evaluation.metrics import Metrics
+from simulation.runner import run_policy
 from evaluation.results import aggregate_results, print_results, metrics_to_dict
 
 from ml.dataset import generate_training_data
@@ -22,31 +20,6 @@ model, X_test, y_test = train_model(dataset)
 
 def xgboost_policy(nodes, request):
     return predict_node(model, nodes, request)
-
-# Simulation
-def run_ml_policy(requests, arrival_interval, network_scenario, seed=42):
-    nodes = create_nodes()
-    environment = SimulationEnvironment(nodes)
-    metrics = Metrics()
-
-    rng = random.Random(seed)
-
-    for i, request in enumerate(requests):
-        if i % NETWORK_UPDATE_INTERVAL == 0:
-            update_network_conditions(nodes, network_scenario, rng)
-        environment.release_finished_requests()
-        selected_node = xgboost_policy(nodes, request)
-        latency = environment.execute(selected_node, request)
-        metrics.record(
-            request_id=request.request_id,
-            node_name=selected_node.name,
-            latency=latency,
-            cost=selected_node.cost_per_request,
-            utilization=selected_node.utilization(),
-            deadline=request.deadline,
-        )
-        environment.advance_time(arrival_interval)
-    return metrics
 
 
 
@@ -69,7 +42,7 @@ def main():
             for seed in evaluation_seeds:
                 requests = generate_requests(100, seed=seed)
 
-                metrics = run_ml_policy(requests, arrival_interval, network_scenario, seed=seed,)
+                metrics = run_policy(xgboost_policy, requests, arrival_interval, network_scenario, seed=seed,)
                 print_results(None, metrics, seed)
                 # Store the results
                 key = (network_scenario, scenario_name)
