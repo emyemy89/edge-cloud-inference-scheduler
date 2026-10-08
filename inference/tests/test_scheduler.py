@@ -8,7 +8,7 @@ from inference.client import send_inference
 
 
 # Configuration
-IMAGE_PATH = Path("../dog.png")
+IMAGE_PATH = Path("../images/dog.png")
 
 
 # Create nodes

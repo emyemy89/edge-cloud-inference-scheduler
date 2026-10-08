@@ -14,7 +14,7 @@ from scheduler.baselines import always_edge_baseline, always_cloud_baseline, gre
 # --------------------------------------------------
 # Configuration
 
-IMAGE_PATH = Path("../inference/dog.png")
+IMAGE_PATH = Path("../inference/images/dog.png")
 NUM_REQUESTS = 50
 
 # Same basic node configuration as the simulator
