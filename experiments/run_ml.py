@@ -1,7 +1,6 @@
 """
 The ML-Scheduler simulation
 """
-import random
 from collections import defaultdict
 
 from nodes.node import create_nodes
@@ -10,7 +9,7 @@ from simulation.runner import run_policy
 from evaluation.results import aggregate_results, print_results, metrics_to_dict
 
 from ml.dataset import generate_training_data
-from ml.xgboost_scheduler import predict_node, train_model, evaluate_model
+from ml.xgboost_scheduler import train_model, evaluate_model, xgboost_policy
 
 # The ML Model
 nodes = create_nodes()
@@ -18,10 +17,9 @@ requests = generate_requests(10000)
 dataset = generate_training_data(nodes, requests)
 model, X_test, y_test = train_model(dataset)
 
-def xgboost_policy(nodes, request):
-    return predict_node(model, nodes, request)
 
-
+def policy(nodes, request):
+    return xgboost_policy(model, nodes, request)
 
 def main():
     print("\n---- XGBoost classification ----")
@@ -42,7 +40,7 @@ def main():
             for seed in evaluation_seeds:
                 requests = generate_requests(100, seed=seed)
 
-                metrics = run_policy(xgboost_policy, requests, arrival_interval, network_scenario, seed=seed,)
+                metrics = run_policy(policy, requests, arrival_interval, network_scenario, seed=seed,)
                 print_results(None, metrics, seed)
                 # Store the results
                 key = (network_scenario, scenario_name)
