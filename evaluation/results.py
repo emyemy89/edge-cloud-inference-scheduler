@@ -40,3 +40,11 @@ def print_results(policy_name: str, metrics: Metrics, seed):
         f"utilization={metrics.average_utilization():.2%}, "
         f"violations={metrics.deadline_violation_rate():.2%}"
     )
+
+def metrics_to_dict(metrics: Metrics):
+    return{
+        "latency": metrics.average_latency(),
+        "cost": metrics.total_cost(),
+        "utilization": metrics.average_utilization(),
+        "violations": metrics.deadline_violation_rate(),
+    }
