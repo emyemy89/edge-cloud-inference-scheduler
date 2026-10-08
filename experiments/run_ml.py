@@ -10,6 +10,7 @@ from simulation.workload import generate_requests
 from simulation.environment import SimulationEnvironment
 from simulation.network import update_network_conditions, NETWORK_UPDATE_INTERVAL
 from evaluation.metrics import Metrics
+from evaluation.results import aggregate_results
 
 from ml.dataset import generate_training_data
 from ml.xgboost_scheduler import predict_node, train_model, evaluate_model
@@ -60,36 +61,6 @@ def print_results(policy_name: str, metrics: Metrics, seed):
         f"violations={metrics.deadline_violation_rate():.2%}"
     )
 
-def print_aggregated_results(results):
-    print("\n\n==============================")
-    print("AGGREGATED XGBOOST RESULTS")
-    print("==============================")
-
-    for (network_scenario, scenario_name), runs in results.items():
-
-        latencies = [run["latency"] for run in runs]
-        costs = [run["cost"] for run in runs]
-        utilizations = [run["utilization"] for run in runs]
-        violations = [run["violations"] for run in runs]
-
-        mean_latency = statistics.mean(latencies)
-        std_latency = statistics.stdev(latencies)
-
-        mean_cost = statistics.mean(costs)
-        std_cost = statistics.stdev(costs)
-
-        mean_utilization = statistics.mean(utilizations)
-        std_utilization = statistics.stdev(utilizations)
-
-        mean_violations = statistics.mean(violations)
-        std_violations = statistics.stdev(violations)
-
-        print(f"\n{network_scenario.upper()} / {scenario_name}")
-        print(f"Average latency: {mean_latency:.2f} ± {std_latency:.2f} ms")
-        print(f"Average cost: {mean_cost:.2f} ± {std_cost:.2f}")
-        print(f"Average utilization: "f"{mean_utilization:.2%} ± {std_utilization:.2%}")
-        print(f"Average deadline violations: "f"{mean_violations:.2%} ± {std_violations:.2%}")
-
 
 def main():
     print("\n---- XGBoost classification ----")
@@ -120,7 +91,7 @@ def main():
                     "utilization": metrics.average_utilization(),
                     "violations": metrics.deadline_violation_rate(),
                 })
-    print_aggregated_results(results)
+    aggregate_results(results)
 
 
 if __name__ == "__main__":
