@@ -110,7 +110,7 @@ def plot_latency_heatmap(df):
         image = ax.imshow(
             masked,
             aspect="auto",
-            cmap="viridis",
+            cmap="plasma",
             norm=LogNorm(vmin=vmin, vmax=vmax),
         )
 
@@ -125,7 +125,7 @@ def plot_latency_heatmap(df):
             for j in range(len(LOADS)):
                 value = values[i, j]
                 if np.isfinite(value):
-                    color = "white" if value > np.sqrt(vmin * vmax) else "black"
+                    color = "black" if value > np.sqrt(vmin * vmax) else "white"
                     ax.text(
                         j, i, f"{value:.1f}",
                         ha="center", va="center",
@@ -133,14 +133,27 @@ def plot_latency_heatmap(df):
                     )
 
     axes[0].set_ylabel("Scheduling policy")
-    fig.colorbar(
-        image, ax=axes, label="Mean latency (ms, logarithmic color scale)",
-        shrink=0.85, pad=0.03,
+    fig.subplots_adjust(
+        left=0.16,
+        right=0.88,
+        bottom=0.16,
+        top=0.82,
+        wspace=0.12,
     )
-    fig.suptitle("Latency across workload and network conditions", y=1.03)
-    fig.tight_layout()
-    save_figure(fig, "01_latency_heatmap")
 
+    cbar_ax = fig.add_axes([0.90, 0.20, 0.018, 0.56])
+    fig.colorbar(
+        image,
+        cax=cbar_ax,
+        label="Mean latency (ms, logarithmic scale)",
+    )
+
+    fig.suptitle(
+        "Latency across workload and network conditions",
+        y=0.96,
+    )
+
+    save_figure(fig, "01_latency_heatmap")
 
 def plot_xgboost_improvement(df):
     """Positive values indicate lower latency with XGBoost than Greedy."""
@@ -194,39 +207,46 @@ def plot_xgboost_improvement(df):
 
 
 def plot_latency_cost_tradeoff(df):
-    """Lower-left points indicate lower latency and lower cost."""
     fig, axes = plt.subplots(
-        1, 3, figsize=(11, 3.8), sharey=True
+        1, 3, figsize=(12, 4), sharey=True
     )
 
     for ax, condition in zip(axes, CONDITIONS):
         subset = df[df["network_condition"] == condition]
 
         for policy in POLICIES:
-            part = subset[subset["policy"] == policy]
+            part = (
+                subset[subset["policy"] == policy]
+                .set_index("load_level")
+                .reindex(LOADS)
+            )
 
-            ax.scatter(
+            # Connect workload levels to show the progression.
+            ax.plot(
                 part["cost_mean"],
                 part["latency_mean"],
                 color=STYLE[policy]["color"],
-                marker=STYLE[policy]["marker"],
-                s=45,
-                alpha=0.9,
-                label=policy,
-                edgecolors="white",
-                linewidths=0.4,
+                linewidth=1,
+                alpha=0.65,
+                zorder=2,
             )
 
-            for _, row in part.iterrows():
-                if pd.notna(row["cost_mean"]) and pd.notna(row["latency_mean"]):
-                    load = LOAD_LABELS[LOADS.index(row["load_level"])]
-                    ax.annotate(
-                        load,
-                        (row["cost_mean"], row["latency_mean"]),
-                        xytext=(3, 3),
-                        textcoords="offset points",
-                        fontsize=6.5,
-                    )
+            for i, load in enumerate(LOADS):
+                row = part.loc[load]
+
+                if pd.isna(row["cost_mean"]) or pd.isna(row["latency_mean"]):
+                    continue
+
+                ax.scatter(
+                    row["cost_mean"],
+                    row["latency_mean"],
+                    color=STYLE[policy]["color"],
+                    marker=STYLE[policy]["marker"],
+                    s=65,
+                    edgecolors="white",
+                    linewidths=0.8,
+                    zorder=3,
+                )
 
         ax.set_yscale("log")
         ax.set_title(condition.title())
@@ -235,14 +255,31 @@ def plot_latency_cost_tradeoff(df):
         ax.set_axisbelow(True)
 
     axes[0].set_ylabel("Mean latency (ms, log scale)")
-    handles, labels = axes[0].get_legend_handles_labels()
+
+    handles = [
+        plt.Line2D(
+            [0], [0],
+            color=STYLE[p]["color"],
+            marker=STYLE[p]["marker"],
+            linewidth=1.5,
+            markersize=6,
+            label=p,
+        )
+        for p in POLICIES
+    ]
+
     fig.legend(
-        handles, labels, loc="upper center",
-        bbox_to_anchor=(0.5, 1.06), ncol=4, frameon=False,
+        handles=handles,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.0),
+        ncol=4,
+        frameon=False,
     )
-    fig.suptitle("Latency–cost trade-off across policies and workloads", y=1.14)
+
+    fig.suptitle("Latency–cost trade-off across policies", y=1.08)
     fig.tight_layout()
     save_figure(fig, "03_latency_cost_tradeoff")
+
 
 
 def plot_latency_degradation(df):
@@ -299,10 +336,16 @@ def plot_latency_degradation(df):
 
 
 def plot_deadline_latency_tradeoff(df):
-    """Each point represents one policy and workload combination."""
     fig, axes = plt.subplots(
-        1, 3, figsize=(11, 3.8), sharey=True
+        1, 3, figsize=(12, 4), sharey=True
     )
+
+    load_markers = {
+        "low_load": "o",
+        "medium_load": "s",
+        "high_load": "^",
+        "very_high_load": "D",
+    }
 
     for ax, condition in zip(axes, CONDITIONS):
         subset = df[df["network_condition"] == condition]
@@ -310,27 +353,24 @@ def plot_deadline_latency_tradeoff(df):
         for policy in POLICIES:
             part = subset[subset["policy"] == policy]
 
-            x = part["latency_mean"]
-            y = 100 * part["violations_mean"]
+            for _, row in part.iterrows():
+                latency = row["latency_mean"]
+                violations = row["violations_mean"] * 100
 
-            ax.scatter(
-                x, y,
-                color=STYLE[policy]["color"],
-                marker=STYLE[policy]["marker"],
-                s=45,
-                label=policy,
-                edgecolors="white",
-                linewidths=0.4,
-            )
+                if pd.isna(latency) or pd.isna(violations) or latency <= 0:
+                    continue
 
-            for (_, row), latency, violation in zip(part.iterrows(), x, y):
-                if pd.notna(latency) and pd.notna(violation):
-                    load = LOAD_LABELS[LOADS.index(row["load_level"])]
-                    ax.annotate(
-                        load, (latency, violation),
-                        xytext=(3, 3), textcoords="offset points",
-                        fontsize=6.5,
-                    )
+                ax.scatter(
+                    latency,
+                    violations,
+                    color=STYLE[policy]["color"],
+                    marker=load_markers[row["load_level"]],
+                    s=65,
+                    edgecolors="white",
+                    linewidths=0.8,
+                    alpha=0.9,
+                    zorder=3,
+                )
 
         ax.set_xscale("log")
         ax.set_title(condition.title())
@@ -339,12 +379,49 @@ def plot_deadline_latency_tradeoff(df):
         ax.set_axisbelow(True)
 
     axes[0].set_ylabel("Deadline violations (%)")
-    handles, labels = axes[0].get_legend_handles_labels()
+
+    policy_handles = [
+        plt.Line2D(
+            [0], [0],
+            color=STYLE[p]["color"],
+            marker="o",
+            linestyle="None",
+            markersize=6,
+            label=p,
+        )
+        for p in POLICIES
+    ]
+
+    load_handles = [
+        plt.Line2D(
+            [0], [0],
+            color="0.35",
+            marker=load_markers[load],
+            linestyle="None",
+            markersize=6,
+            label=label,
+        )
+        for load, label in zip(LOADS, LOAD_LABELS)
+    ]
+
     fig.legend(
-        handles, labels, loc="upper center",
-        bbox_to_anchor=(0.5, 1.06), ncol=4, frameon=False,
+        handles=policy_handles,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.04),
+        ncol=4,
+        frameon=False,
     )
-    fig.suptitle("Deadline reliability versus latency", y=1.14)
+
+    fig.legend(
+        handles=load_handles,
+        loc="lower center",
+        bbox_to_anchor=(0.5, -0.04),
+        ncol=4,
+        frameon=False,
+        title="Workload",
+    )
+
+    fig.suptitle("Deadline violations versus latency", y=1.12)
     fig.tight_layout()
     save_figure(fig, "05_deadline_latency_tradeoff")
 
