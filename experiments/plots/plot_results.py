@@ -3,7 +3,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 from matplotlib.colors import LogNorm
+
 
 
 PLOT_DIR = Path(__file__).resolve().parent / "figures"
@@ -80,8 +82,8 @@ def plot_latency_heatmap(df):
         1, 3, figsize=(12, 4.5), sharey=True
     )
 
-    values = df["latency_mean"].to_numpy(dtype=float)
-    positive = values[np.isfinite(values) & (values > 0)]
+    all_values = df["latency_mean"].to_numpy(dtype=float)
+    positive = all_values[np.isfinite(all_values) & (all_values > 0)]
 
     if len(positive) == 0:
         plt.close(fig)
@@ -95,6 +97,7 @@ def plot_latency_heatmap(df):
 
     for ax, condition in zip(axes, CONDITIONS):
         subset = df[df["network_condition"] == condition]
+
         matrix = (
             subset.pivot(
                 index="policy",
@@ -104,35 +107,26 @@ def plot_latency_heatmap(df):
             .reindex(index=POLICIES, columns=LOADS)
         )
 
-        values = matrix.to_numpy(dtype=float)
-        masked = np.ma.masked_invalid(values)
-
-        image = ax.imshow(
-            masked,
-            aspect="auto",
-            cmap="plasma",
+        sns.heatmap(
+            matrix,
+            ax=ax,
+            cmap="crest",
             norm=LogNorm(vmin=vmin, vmax=vmax),
+            annot=True,
+            fmt=".1f",
+            annot_kws={"fontsize": 7},
+            linewidths=0.5,
+            linecolor="white",
+            cbar=False,
         )
 
         ax.set_title(condition.title())
-        ax.set_xticks(range(len(LOADS)))
         ax.set_xticklabels(LOAD_LABELS)
-        ax.set_yticks(range(len(POLICIES)))
-        ax.set_yticklabels(POLICIES)
+        ax.set_yticklabels(POLICIES, rotation=0)
         ax.set_xlabel("Workload intensity")
 
-        for i in range(len(POLICIES)):
-            for j in range(len(LOADS)):
-                value = values[i, j]
-                if np.isfinite(value):
-                    color = "black" if value > np.sqrt(vmin * vmax) else "white"
-                    ax.text(
-                        j, i, f"{value:.1f}",
-                        ha="center", va="center",
-                        fontsize=7, color=color,
-                    )
-
     axes[0].set_ylabel("Scheduling policy")
+
     fig.subplots_adjust(
         left=0.16,
         right=0.88,
@@ -141,9 +135,17 @@ def plot_latency_heatmap(df):
         wspace=0.12,
     )
 
+    # Shared colorbar for all three heatmaps.
     cbar_ax = fig.add_axes([0.90, 0.20, 0.018, 0.56])
+
+    sm = plt.cm.ScalarMappable(
+        norm=LogNorm(vmin=vmin, vmax=vmax),
+        cmap="crest",
+    )
+    sm.set_array([])
+
     fig.colorbar(
-        image,
+        sm,
         cax=cbar_ax,
         label="Mean latency (ms, logarithmic scale)",
     )
@@ -154,6 +156,7 @@ def plot_latency_heatmap(df):
     )
 
     save_figure(fig, "01_latency_heatmap")
+
 
 def plot_xgboost_improvement(df):
     """Positive values indicate lower latency with XGBoost than Greedy."""
@@ -481,15 +484,12 @@ def plot_latency_variability(df, run_df):
         ax.set_xlabel("Workload intensity")
         ax.grid(True, which="major", linestyle=":", linewidth=0.6)
         ax.set_axisbelow(True)
-
+    axes[0].set_ylim(top=100)
     axes[0].set_ylabel("Latency (ms, log scale)")
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(
         handles, labels, loc="upper center",
         bbox_to_anchor=(0.5, 1.06), ncol=4, frameon=False,
-    )
-    fig.suptitle(
-        "Latency variability across evaluation runs", y=1.14
     )
     fig.tight_layout()
     save_figure(fig, "06_latency_variability")
@@ -534,7 +534,6 @@ def plot_utilization(df):
         handles, labels, loc="upper center",
         bbox_to_anchor=(0.5, 1.06), ncol=4, frameon=False,
     )
-    fig.suptitle("Resource utilization under increasing workload", y=1.14)
     fig.tight_layout()
     save_figure(fig, "07_resource_utilization")
 

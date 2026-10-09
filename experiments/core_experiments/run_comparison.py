@@ -11,7 +11,7 @@ from simulation.workload import generate_requests
 from simulation.runner import run_policy
 from ml.xgboost_scheduler import train_model, xgboost_policy
 from ml.dataset import generate_training_data
-from evaluation.results import aggregate_results, metrics_to_dict
+from evaluation.results import metrics_to_dict
 from experiments.plots.plot_results import plot_all_results
 
 
