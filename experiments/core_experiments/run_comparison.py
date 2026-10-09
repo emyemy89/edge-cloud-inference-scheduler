@@ -1,5 +1,4 @@
 import statistics
-import csv
 from collections import defaultdict
 
 from nodes.node import create_nodes
@@ -13,17 +12,17 @@ from simulation.runner import run_policy
 from ml.xgboost_scheduler import train_model, xgboost_policy
 from ml.dataset import generate_training_data
 from evaluation.results import aggregate_results, metrics_to_dict
+from experiments.plots.plot_results import plot_all_results
 
 
 evaluation_seeds = [1, 2, 3, 4, 5]
 workload_scenarios = {"low_load": 50, "medium_load": 20, "high_load": 10, "very_high_load": 5}
 network_scenarios = ["stable", "moderate", "high"]
 
-RESULTS_CSV_PATH = "experiments/results.csv"
 
 
-def aggregate_results(results):
-    rows = []
+def summarize_results(results):
+    summary_rows = []
 
     for key, runs in results.items():
         network_scenario, scenario_name, policy_name = key
@@ -32,16 +31,38 @@ def aggregate_results(results):
         costs = [run["cost"] for run in runs]
         utilizations = [run["utilization"] for run in runs]
         violations = [run["violations"] for run in runs]
-        print(f"\n{key[0].upper()} / {key[1]} / {key[2]}")
-        print(f"Average latency: "f"{statistics.mean(latencies):.2f} ± "f"{statistics.stdev(latencies):.2f} ms")
 
-        print(f"Average cost: "f"{statistics.mean(costs):.2f} ± "f"{statistics.stdev(costs):.2f}")
+        latency_mean = statistics.mean(latencies)
+        latency_std = statistics.stdev(latencies)
+        cost_mean = statistics.mean(costs)
+        cost_std = statistics.stdev(costs)
+        utilization_mean = statistics.mean(utilizations)
+        violations_mean = statistics.mean(violations)
 
+        print(f"\n{network_scenario.upper()} / {scenario_name} / {policy_name}")
         print(
-            f"Average utilization: "
-            f"{statistics.mean(utilizations):.2%} ± "
-            f"{statistics.stdev(utilizations):.2%}"
+            f"Average latency: {latency_mean:.2f} "
+            f"± {latency_std:.2f} ms"
         )
+        print(f"Average cost: {cost_mean:.2f} ± {cost_std:.2f}")
+        print(
+            f"Average utilization: {utilization_mean:.2%}"
+        )
+        print(f"Deadline violations: {violations_mean:.2%}")
+
+        summary_rows.append({
+            "network_condition": network_scenario,
+            "load_level": scenario_name,
+            "policy": policy_name,
+            "latency_mean": latency_mean,
+            "latency_std": latency_std,
+            "cost_mean": cost_mean,
+            "utilization_mean": utilization_mean,
+            "violations_mean": violations_mean,
+        })
+
+    return summary_rows
+
 nodes = create_nodes()
 training_requests = generate_requests(10000)
 dataset = generate_training_data(nodes, training_requests)
@@ -76,7 +97,8 @@ def main():
     print("SCHEDULER COMPARISON")
     print("==============================")
 
-    aggregate_results(results)
+    summary_rows = summarize_results(results)
+    plot_all_results(summary_rows)
 
 
 if __name__ == "__main__":

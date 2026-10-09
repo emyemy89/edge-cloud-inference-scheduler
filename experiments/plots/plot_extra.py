@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-df = pd.read_csv("experiments/results.csv")
+df = pd.read_csv("../../experiments/results.csv")
 
 conditions = ["stable", "moderate", "high"]
 loads = ["low_load", "medium_load", "high_load", "very_high_load"]
