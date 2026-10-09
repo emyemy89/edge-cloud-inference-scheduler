@@ -32,34 +32,46 @@ def summarize_results(results):
         utilizations = [run["utilization"] for run in runs]
         violations = [run["violations"] for run in runs]
 
-        latency_mean = statistics.mean(latencies)
-        latency_std = statistics.stdev(latencies)
-        cost_mean = statistics.mean(costs)
-        cost_std = statistics.stdev(costs)
-        utilization_mean = statistics.mean(utilizations)
-        violations_mean = statistics.mean(violations)
-
-        print(f"\n{network_scenario.upper()} / {scenario_name} / {policy_name}")
-        print(
-            f"Average latency: {latency_mean:.2f} "
-            f"± {latency_std:.2f} ms"
-        )
-        print(f"Average cost: {cost_mean:.2f} ± {cost_std:.2f}")
-        print(
-            f"Average utilization: {utilization_mean:.2%}"
-        )
-        print(f"Deadline violations: {violations_mean:.2%}")
-
-        summary_rows.append({
+        row = {
             "network_condition": network_scenario,
             "load_level": scenario_name,
             "policy": policy_name,
-            "latency_mean": latency_mean,
-            "latency_std": latency_std,
-            "cost_mean": cost_mean,
-            "utilization_mean": utilization_mean,
-            "violations_mean": violations_mean,
-        })
+
+            "latency_mean": statistics.mean(latencies),
+            "latency_std": statistics.stdev(latencies),
+
+            "cost_mean": statistics.mean(costs),
+            "cost_std": statistics.stdev(costs),
+
+            "utilization_mean": statistics.mean(utilizations),
+            "utilization_std": statistics.stdev(utilizations),
+
+            "violations_mean": statistics.mean(violations),
+            "violations_std": statistics.stdev(violations),
+        }
+
+        summary_rows.append(row)
+
+        print(
+            f"\n{network_scenario.upper()} / "
+            f"{scenario_name} / {policy_name}"
+        )
+        print(
+            f"Latency: {row['latency_mean']:.2f} "
+            f"± {row['latency_std']:.2f} ms"
+        )
+        print(
+            f"Cost: {row['cost_mean']:.2f} "
+            f"± {row['cost_std']:.2f}"
+        )
+        print(
+            f"Utilization: {row['utilization_mean']:.2%} "
+            f"± {row['utilization_std']:.2%}"
+        )
+        print(
+            f"Deadline violations: {row['violations_mean']:.2%} "
+            f"± {row['violations_std']:.2%}"
+        )
 
     return summary_rows
 
