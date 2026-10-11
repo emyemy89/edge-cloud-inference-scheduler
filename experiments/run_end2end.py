@@ -6,9 +6,11 @@ from pathlib import Path
 from inference.client import send_inference, measure_network_latency
 from ml.dataset import generate_training_data
 from ml.xgboost_scheduler import train_model, predict_node
+
 from nodes.node import create_nodes
 from simulation.workload import InferenceRequest, generate_requests
 from scheduler.baselines import always_edge_baseline, always_cloud_baseline, greedy_baseline
+from experiments.plots.plot_extension import plot_real_world_results
 
 
 # --------------------------------------------------
@@ -155,4 +157,11 @@ for policy_name in policies:
     for node in NODES:
         count = sum(r["node"] == node.name for r in results)
         print(f"    {node.name}: " f"{count}/{NUM_REQUESTS}")
+
+    plot_real_world_results(
+        all_seed_results=all_seed_results,
+        policies=policies,
+        seeds=SEEDS,
+        nodes=NODES,
+    )
     
