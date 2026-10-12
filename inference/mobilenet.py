@@ -15,8 +15,7 @@ class MobileNetInference:
         self.preprocess = weights.transforms()
         self.categories = weights.meta["categories"]
 
-    def predict(self, image_path: str):
-        image = Image.open(image_path).convert("RGB")
+    def predict(self, image):
         input_tensor = self.preprocess(image).unsqueeze(0)
         input_tensor = input_tensor.to(self.device)
         start_time = time.perf_counter()
