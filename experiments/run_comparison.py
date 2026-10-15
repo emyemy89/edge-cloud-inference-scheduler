@@ -95,19 +95,11 @@ def main():
         for scenario_name, arrival_interval in workload_scenarios.items():
             for seed in evaluation_seeds:
 
-                requests = generate_requests(100, seed=seed)
+                requests = generate_requests(1000, seed=seed)
 
                 for policy_name, policy in baseline_policies.items():
-                    metrics = run_policy(
-                        policy,
-                        requests,
-                        arrival_interval,
-                        network_scenario,
-                        seed=seed,
-                    )
-
-                    results[
-                        (network_scenario, scenario_name, policy_name)
+                    metrics = run_policy(policy, requests, arrival_interval, network_scenario, seed=seed,)
+                    results[(network_scenario, scenario_name, policy_name)
                     ].append({
                         "latency": metrics.average_latency(),
                         "cost": metrics.total_cost(),
@@ -115,12 +107,7 @@ def main():
                         "violations": metrics.deadline_violation_rate(),
                     })
 
-                metrics = run_ml_policy(
-                    requests,
-                    arrival_interval,
-                    network_scenario,
-                    seed=seed,
-                )
+                metrics = run_ml_policy(requests, arrival_interval,network_scenario, seed=seed)
 
                 results[
                     (network_scenario, scenario_name, "XGBoost")
