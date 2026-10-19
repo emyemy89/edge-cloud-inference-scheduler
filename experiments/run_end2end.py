@@ -3,7 +3,7 @@ import statistics
 import random
 from pathlib import Path
 
-from inference.client import send_inference
+from inference.client import send_inference, measure_network_latency
 from ml.dataset import generate_training_data
 from ml.xgboost_scheduler import train_model, predict_node
 from nodes.node import Node
@@ -59,11 +59,9 @@ for seed in SEEDS:
 
         for node in NODES:
             if "edge" in node.name:
-                node.current_load = (rng.uniform(0.0, 1.0)* node.compute_capacity)
-                node.network_latency = (node.base_network_latency* rng.uniform(0.5, 2.0))
+                node.current_load = rng.uniform(0.0, 1.0) * node.compute_capacity
             else:
-                node.current_load = (rng.uniform(0.0, 0.5)* node.compute_capacity)
-                node.network_latency = (node.base_network_latency * rng.uniform(0.5, 1.5))
+                node.current_load = rng.uniform(0.0, 0.5) * node.compute_capacity
 
         requests.append(request)
         states.append([(node.current_load, node.network_latency) for node in NODES])
@@ -82,6 +80,8 @@ for seed in SEEDS:
                 node.network_latency = state[1]
 
             request_start = time.perf_counter()
+            for node in NODES:
+                node.network_latency = measure_network_latency(node.name, num_samples=1)
             scheduler_start = time.perf_counter()
             selected_node = policy(NODES, request)
             scheduler_time_ms = (time.perf_counter() - scheduler_start) * 1000
