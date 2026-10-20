@@ -3,7 +3,7 @@ import csv
 from collections import defaultdict
 
 from simulation.workload import generate_requests
-from experiments.run_baseline import run_policy, create_nodes
+from experiments.run_baseline import run_policy
 from scheduler.baselines import (
     always_edge_baseline,
     always_cloud_baseline,

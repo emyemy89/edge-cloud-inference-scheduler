@@ -8,7 +8,7 @@ the best-performing values and evaluates the final model.
 import random
 import statistics
 
-from nodes.node import Node
+from nodes.node import create_nodes
 from simulation.workload import generate_requests
 from simulation.environment import SimulationEnvironment
 from simulation.network import update_network_conditions, NETWORK_UPDATE_INTERVAL
@@ -45,27 +45,7 @@ NETWORK_SCENARIOS = [
 # Nodes
 # ---------------------------------------------------------
 
-def create_nodes() -> list[Node]:
-    return [
-        Node(
-            name="edge_1",
-            compute_capacity=10,
-            network_latency=5,
-            cost_per_request=0.01,
-        ),
-        Node(
-            name="edge_2",
-            compute_capacity=20,
-            network_latency=10,
-            cost_per_request=0.015,
-        ),
-        Node(
-            name="cloud",
-            compute_capacity=100,
-            network_latency=50,
-            cost_per_request=0.05,
-        ),
-    ]
+nodes = create_nodes()
 
 
 # ---------------------------------------------------------
@@ -109,7 +89,6 @@ def train_tuned_model(dataset, params):
 # ---------------------------------------------------------
 
 def run_ml_policy(model, requests, arrival_interval, network_scenario, seed=42):
-    nodes = create_nodes()
     environment = SimulationEnvironment(nodes)
     metrics = Metrics()
 

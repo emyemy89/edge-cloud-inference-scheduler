@@ -6,7 +6,7 @@ from pathlib import Path
 from inference.client import send_inference, measure_network_latency
 from ml.dataset import generate_training_data
 from ml.xgboost_scheduler import train_model, predict_node
-from nodes.node import Node
+from nodes.node import create_nodes
 from simulation.workload import InferenceRequest, generate_requests
 from scheduler.baselines import always_edge_baseline, always_cloud_baseline, greedy_baseline
 
@@ -18,11 +18,7 @@ IMAGE_PATH = Path("../inference/dog.png")
 NUM_REQUESTS = 50
 
 # Same basic node configuration as the simulator
-NODES = [
-    Node(name="edge_1", compute_capacity=10, network_latency=5, cost_per_request=0.01,),
-    Node(name="edge_2", compute_capacity=20, network_latency=10, cost_per_request=0.015,),
-    Node(name="cloud", compute_capacity=100, network_latency=50, cost_per_request=0.05,),
-]
+NODES = create_nodes()
 
 
 # Train XGBoost
@@ -43,7 +39,6 @@ policies = {
 
 # Run end-to-end experiment
 SEEDS = [42, 43, 44, 45, 46]
-
 all_seed_results = {}
 
 for seed in SEEDS:
@@ -72,7 +67,6 @@ for seed in SEEDS:
     for policy_name, policy in policies.items():
 
         results = []
-
         for request_id, request in enumerate(requests):
             # Restore exactly the same state for every policy
             for node, state in zip(NODES, states[request_id]):

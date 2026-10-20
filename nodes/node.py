@@ -54,5 +54,11 @@ class Node:
         """
         return min(1.0, self.current_load / self.compute_capacity)
 
+def create_nodes() -> list[Node]:
+    return [
+        Node(name="edge_1", compute_capacity=10, network_latency=5, cost_per_request=0.01, ),
+        Node(name="edge_2", compute_capacity=20, network_latency=10, cost_per_request=0.015, ),
+        Node(name="cloud", compute_capacity=100, network_latency=50, cost_per_request=0.05, ),
+    ]
 
 
