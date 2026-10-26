@@ -16,7 +16,7 @@ from experiments.plots.plot_extension import plot_real_world_results
 # --------------------------------------------------
 # Configuration
 
-IMAGE_PATH = Path("../inference/images/dog.png")
+IMAGE_PATH = Path("../../inference/images/dog.png")
 NUM_REQUESTS = 50
 
 # Same basic node configuration as the simulator

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 def plot_real_world_results(all_seed_results, policies, seeds, nodes):
     """Plot results from the real-world end-to-end experiment."""
 
-    plot_dir = Path(__file__).resolve().parent / ".." / "figures"
+    plot_dir = Path(__file__).resolve().parent / "figures"
     plot_dir.mkdir(parents=True, exist_ok=True)
 
     policy_names = list(policies)
