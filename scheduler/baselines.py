@@ -14,7 +14,10 @@ def always_edge_baseline(nodes: list[Node], request: InferenceRequest) -> Node:
                   if "edge" in node.name and node.can_handle(request.required_compute)]
     if not edge_nodes:
         raise RuntimeError("No available edge node")
-    return edge_nodes[0]
+    return min(
+        edge_nodes,
+        key=lambda node: node.estimated_latency(request.required_compute)
+    )
 
 def always_cloud_baseline(nodes: list[Node], request: InferenceRequest) -> Node:
     """
