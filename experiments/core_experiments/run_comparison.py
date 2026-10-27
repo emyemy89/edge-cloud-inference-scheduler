@@ -1,4 +1,4 @@
-import statistics
+
 from collections import defaultdict
 
 from nodes.node import create_nodes
@@ -13,6 +13,7 @@ from ml.xgboost_scheduler import train_model, xgboost_policy
 from ml.dataset import generate_training_data
 from evaluation.results import metrics_to_dict
 from experiments.plots.plot_results import plot_all_results
+from evaluation.results import aggregate_results, metrics_to_dict
 
 
 evaluation_seeds = [1, 2, 3, 4, 5]
