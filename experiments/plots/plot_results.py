@@ -25,17 +25,17 @@ STYLE = {
 
 plt.rcParams.update({
     "font.family": "serif",
-    "font.size": 9,
-    "axes.labelsize": 9,
-    "axes.titlesize": 10,
-    "legend.fontsize": 8,
-    "xtick.labelsize": 8,
-    "ytick.labelsize": 8,
+    "font.size": 12,
+    "axes.labelsize": 12,
+    "axes.titlesize": 13,
+    "legend.fontsize": 11,
+    "xtick.labelsize": 11,
+    "ytick.labelsize": 11,
     "axes.spines.top": False,
     "axes.spines.right": False,
-    "axes.linewidth": 0.7,
-    "xtick.major.width": 0.7,
-    "ytick.major.width": 0.7,
+    "axes.linewidth": 0.8,
+    "xtick.major.width": 0.8,
+    "ytick.major.width": 0.8,
     "savefig.dpi": 300,
 })
 
@@ -114,7 +114,7 @@ def plot_latency_heatmap(df):
             norm=LogNorm(vmin=vmin, vmax=vmax),
             annot=True,
             fmt=".1f",
-            annot_kws={"fontsize": 7},
+            annot_kws={"fontsize": 10},
             linewidths=0.5,
             linecolor="white",
             cbar=False,
@@ -484,7 +484,7 @@ def plot_latency_variability(df, run_df):
         ax.set_xlabel("Workload intensity")
         ax.grid(True, which="major", linestyle=":", linewidth=0.6)
         ax.set_axisbelow(True)
-    axes[0].set_ylim(top=100)
+
     axes[0].set_ylabel("Latency (ms, log scale)")
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(

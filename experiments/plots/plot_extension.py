@@ -103,7 +103,7 @@ def plot_real_world_results(all_seed_results, policies, seeds, nodes):
         "End-to-end latency",
     ]
 
-    fig, ax = plt.subplots(figsize=(9, 5))
+    fig, ax = plt.subplots(figsize=(12, 7))
 
     width = 0.18
     x = list(range(len(timing_metrics)))
@@ -111,31 +111,58 @@ def plot_real_world_results(all_seed_results, policies, seeds, nodes):
     for i, policy in enumerate(policy_names):
         means = [summary[policy][metric][0] for metric in timing_metrics]
         stds = [summary[policy][metric][1] for metric in timing_metrics]
-        offsets = [position + (i - (len(policy_names) - 1) / 2) * width
-                   for position in x]
+        offsets = [
+            position + (i - (len(policy_names) - 1) / 2) * width
+            for position in x
+        ]
 
         ax.bar(
             offsets, means, width,
             yerr=stds,
-            capsize=2,
+            capsize=4,
             color=colors[policy],
             label=policy,
             edgecolor="white",
-            linewidth=0.5,
+            linewidth=0.8,
         )
 
     ax.set_yscale("log")
     ax.set_xticks(x)
-    ax.set_xticklabels(timing_metrics, rotation=15, ha="right")
-    ax.set_ylabel("Mean measured time (ms, log scale)")
-    ax.set_title("Timing measurements across scheduling policies")
-    ax.grid(axis="y", which="major", linestyle=":", linewidth=0.6)
-    ax.set_axisbelow(True)
-    ax.legend(frameon=False, ncol=2)
+    ax.set_xticklabels(
+        timing_metrics,
+        rotation=20,
+        ha="right",
+        fontsize=17,
+    )
+    ax.set_ylabel("Mean measured time (ms, log scale)", fontsize=18)
+    ax.set_title(
+        "Timing measurements across scheduling policies",
+        fontsize=19,
+        pad=16,
+    )
 
-    fig.tight_layout()
-    fig.savefig(plot_dir / "11_realworld_timing_measurements.png",
-                dpi=300, bbox_inches="tight")
+    # Explicitly enlarge tick labels on both axes.
+    ax.tick_params(axis="both", which="major", labelsize=16)
+    ax.tick_params(axis="y", which="minor", labelsize=14)
+
+    ax.grid(axis="y", which="major", linestyle=":", linewidth=0.8)
+    ax.set_axisbelow(True)
+
+    ax.legend(
+        frameon=False,
+        ncol=2,
+        fontsize=16,
+        handlelength=2,
+        columnspacing=1.5,
+    )
+
+    fig.tight_layout(pad=2)
+
+    fig.savefig(
+        plot_dir / "11_realworld_timing_measurements.png",
+        dpi=300,
+        bbox_inches="tight",
+    )
     plt.close(fig)
 
     # --------------------------------------------------
